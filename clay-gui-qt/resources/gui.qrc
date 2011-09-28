@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="res" >
+    <file>module_body_small.png</file>
+    <file>module_connector.png</file>
+    <file>module_body.png</file>
+    <file>new_project.png</file>
+    <file>load.PNG</file>
+    <file>save.png</file>
+    <file>play_button.png</file>
+    <file>add.png</file>
+    <file>module.png</file>
+	<file>ModuleUIV2.png</file>
+	<file>ModuleUIConnectorV2.png</file>
+  </qresource> 
+</RCC>
