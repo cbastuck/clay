@@ -21,11 +21,7 @@ INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
                     ${CLAY_BOOST_INCLUDE}
                     ${CLAY_XERCES_INCLUDE}
                     ..)          
-                    
-LINK_DIRECTORIES(${CLAY_XERCES_LINK_PATH}
-                 ${CLAY_QT_LINK_PATH}
-                 ${CLAY_BOOST_LINK_PATH})
-                      
+                                          
 SET(CLAY_LIBS clay-core 
               clay-gui-qt
 			  clay-data-types

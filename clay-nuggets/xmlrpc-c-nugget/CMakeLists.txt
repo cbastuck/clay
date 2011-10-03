@@ -33,14 +33,7 @@ INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
                     ${CLAY_XMLRPC_INCLUDE}
                     ${CLAY_XQILLA_INCLUDE}
                     ..)
-                                                   
-#------- the linker section ------------
-LINK_DIRECTORIES(${CLAY_BOOST_LINK_PATH}
-                 ${CLAY_XERCES_LINK_PATH}
-                 ${CLAY_JUCE_LINK_PATH}
-                 ${CLAY_XMLRPC_LINK_PATH}
-                 ${CLAY_XQILLA_LINK_PATH})
-				 
+                                                   			 
 SET(CLAY_LIBS clay-core
               clay-data-types
               ${CLAY_XERCES_LIB})

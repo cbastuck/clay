@@ -89,11 +89,9 @@ INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
                     ${CLAY_XERCES_INCLUDE} 
                     . 
                     ..)                
-					
-LINK_DIRECTORIES(${CLAY_XERCES_LINK_PATH})
-                    
-SET(CLAY_LIBS ${CLAY_XERCES_LIB})  
 			
 ADD_LIBRARY(${CLAY_TARGET} SHARED ${CLAY_SOURCES})
 
-TARGET_LINK_LIBRARIES(${CLAY_TARGET} ${CLAY_LIBS})  
+TARGET_LINK_LIBRARIES(${CLAY_TARGET} 
+					  optimized ${CLAY_XERCES_LIB}
+					  debug ${CLAY_XERCES_LIB_D})  
