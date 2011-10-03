@@ -1,0 +1,11 @@
+1. download: http://downloads.sourceforge.net/project/boost/boost/1.47.0/boost_1_47_0.tar.gz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.47.0%2F&ts=1317660554&use_mirror=ignum
+2. .\bootstrap.bat
+
+(for 32 bit libraries)
+3. .\b2 link=static threading=multi runtime-link=static debug --libdir=../../bin/x86/Debug --prefix=.. install
+4. .\b2 link=static threading=multi runtime-link=static release --libdir=../../bin/x86/Release --prefix=.. install
+
+(for 64 bit libraries)
+5. .\b2 link=static threading=multi runtime-link=static debug architecture=x86 address-model=64 --libdir=../../bin/x86-64/Debug --prefix=.. install
+6. .\b2 link=static threading=multi runtime-link=static release architecture=x86 address-model=64 --libdir=../../bin/x86-64/Release --prefix=.. install
+
