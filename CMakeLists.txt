@@ -51,7 +51,7 @@ ADD_SUBDIRECTORY(clay-data-types)
 ADD_SUBDIRECTORY(clay-test)
 
 #---------------- gui-related clay projects -------------------
-IF(ClayQt4_FOUND)
+IF(QT4_FOUND)
 	ADD_SUBDIRECTORY(clay-gui-qt)
 	ADD_SUBDIRECTORY(clay-designer)
 	ADD_SUBDIRECTORY(clay-nuggets)
