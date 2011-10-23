@@ -36,11 +36,9 @@ private:
 
 public:
   ClayTypeConversion();
-
   ~ClayTypeConversion();
 
   void init();
-
   void deInit();
 
   tConversionModuleFactory getConversionModuleFactory(ClayTypes::Type eSrcType, ClayTypes::Type eDstType);

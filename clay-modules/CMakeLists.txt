@@ -6,7 +6,7 @@ cmake_policy(SET CMP0015 OLD)
 
 PROJECT(${CLAY_TARGET})
 
-MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")  
+MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")  
                           
 SET(CLAY_SRC_FOLDER_HOST    host/HostModule.cpp                    host/HostModule.h)
 

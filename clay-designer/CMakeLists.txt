@@ -6,10 +6,7 @@ cmake_policy(SET CMP0015 OLD)
 
 PROJECT(${CLAY_TARGET})
 
-MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")
-
-FIND_PACKAGE(ClayQt4 COMPONENTS QtCore QtGui REQUIRED)
-INCLUDE(${QT_USE_FILE})
+MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
 SET(CLAY_SOURCES clay-designer.cpp
 			     ../clay-modules/host/HostModule.cpp  ../clay-modules/host/HostModule.h
@@ -18,14 +15,13 @@ SET(CLAY_SOURCES clay-designer.cpp
 INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
                     ${CMAKE_CURRENT_BINARY_DIR}
 					${CMAKE_CURRENT_BINARY_DIR}/../clay-gui-qt #hack otherwise we do not find resources
-                    ${CLAY_BOOST_INCLUDE}
-                    ${CLAY_XERCES_INCLUDE}
                     ..)          
                                           
 SET(CLAY_LIBS clay-core 
               clay-gui-qt
 			  clay-data-types
-              ${CLAY_XERCES_LIB}
+              optimized ${CLAY_XERCES_LIB}
+			  debug ${CLAY_XERCES_LIB_D}
               ${CLAY_PLATFORM_LIBS})                  
                                        
 ADD_EXECUTABLE(${CLAY_TARGET} 

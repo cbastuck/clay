@@ -22,6 +22,8 @@
 
 #include "ClayTypeMapping.h"
 
+#include <sstream>
+
 namespace CLAY
 {
   namespace MODEL
@@ -39,6 +41,22 @@ namespace CLAY
       bool convert(const S& src, D& dst)
       {
         dst = static_cast<D>(src);
+        return true;
+      }
+    };
+
+    template<class S>
+    class ValueStringConverter
+    {
+    public:
+      typedef S           tConvSrc;
+      typedef std::string tConvDst;
+
+      bool convert(const S& src, std::string& sDst)
+      {
+        std::stringstream sstream;
+        sstream << src;
+        sDst = sstream.str();
         return true;
       }
     };
@@ -86,6 +104,7 @@ namespace CLAY
       m_collTypeMappings[getType<unsigned int>()][getType<short>()]          = ConversionModule<AssignValueConverter<unsigned int, short> >::tDescriptor::create;
       m_collTypeMappings[getType<unsigned int>()][getType<unsigned short>()] = ConversionModule<AssignValueConverter<unsigned int, unsigned short> >::tDescriptor::create;
       m_collTypeMappings[getType<unsigned int>()][getType<float>()]          = ConversionModule<AssignValueConverter<unsigned int, float> >::tDescriptor::create;
+      m_collTypeMappings[getType<unsigned int>()][getType<std::string>()]    = ConversionModule<ValueStringConverter<unsigned int> >::tDescriptor::create;
     }
 
     //---------------------------------------------deInit

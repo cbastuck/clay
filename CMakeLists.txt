@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 SET(CLAY_TARGET clay)
 
-MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")
+MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
 #---------------- set the output path --------------------------
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
@@ -39,12 +39,21 @@ ELSEIF(UNIX)
     SET(CLAY_PLATFORM_LIBS )    
 ENDIF()
 
-#--------------------- externals search path -------------------
-#TODO: check architecture
-LINK_DIRECTORIES(${CLAY_EXTERNALS_DIR}/bin/x86)
-
 #---------------------- clay projects --------------------------
 ADD_SUBDIRECTORY(externals)
+
+#--------------------- externals search paths -------------------
+LINK_DIRECTORIES(${CLAY_EXTERNALS_DIR}/bin/x86 #TODO: check architecture
+				 ${CLAY_BOOST_LIBPATH}) 
+				 
+INCLUDE_DIRECTORIES(${CLAY_BOOST_INCLUDE}
+                    ${CLAY_XERCES_INCLUDE})
+					
+IF(QT4_FOUND)
+	INCLUDE(${QT_USE_FILE})
+endif()					
+#---------------------------------------------------------------
+
 ADD_SUBDIRECTORY(clay-core)
 ADD_SUBDIRECTORY(clay-modules)
 ADD_SUBDIRECTORY(clay-data-types)

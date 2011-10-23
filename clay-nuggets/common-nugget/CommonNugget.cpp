@@ -1,7 +1,7 @@
 /**************************************************************************\
 *
 *  This file is part of the C++ Modular Development Framework.
-*  Copyright (C) 2009 by Christoph Bastuck.  All rights reserved.
+*  Copyright (C) 2011 by Christoph Bastuck.  All rights reserved.
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU General Public License
@@ -16,23 +16,17 @@
 *
 \**************************************************************************/
 
-#ifndef ClayTypes_H_
-#define ClayTypes_H_
+#include <clay-modules/value/UnsignedIntModule.h>
+#include <clay-gui-qt/modules/value/ValueModuleUI.h>
 
-namespace CLAY{ namespace ClayTypes{
+#include <clay-modules/common/math/AdderModule.h>
 
-enum Type
-{
-  UNKNOWN_TYPE = 0,
-  UNSIGNED_INT,
-  INT,
-  UNSIGNED_SHORT,
-  SHORT,
-  FLOAT,
-  DOUBLE,
-  ASCII
-};
+#include <clay-modules/common/output/ConsoleOutput.h>
 
-} }
+#include <clay-core/nugget/IClayNugget.h>
 
-#endif
+#define CLAY_MODULE_BUNDLE_NUGGET boost::mpl::list<CLAY::NUGGET::NuggetItem<CLAY::MODULE::UnsignedIntModule, CLAY::UI::ValueModuleUI<CLAY::MODULE::UnsignedIntModule> >, \
+                                                   CLAY::NUGGET::NuggetItem<CLAY::MODULE::AdderModule>, \
+                                                   CLAY::NUGGET::NuggetItem<CLAY::MODULE::ConsoleOutput> >
+
+#include <clay-core/nugget/ClayNugget.h>

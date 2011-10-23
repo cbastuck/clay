@@ -1,0 +1,123 @@
+
+<host-module-ui>
+
+  <modules>
+    <host-module>
+      <host-base>
+        <hosted-nuggets num-hosted-nuggets="1">
+          <hosted-nugget filename="C:/claygithub/build/bin/Debug/common-nugget.dll"/>
+        </hosted-nuggets>
+        <hosted-modules>
+          <hosted-module hosted-module-id="UINT" hosted-module-ns="COMN" hosted-module-rt-id="UINT0">
+            <value-module value="12">
+              <base>
+                <module module-id="UINT" module-namespace="COMN" module-runtime-id="UINT0">
+                  <module-io>
+                    <module-inputs/>
+                    <module-outputs>
+                      <module-output output-name="value">
+                        <output-root output-name="value">
+                          <output-connection input-name="in1" module-id="addr2"/>
+                        </output-root>
+                      </module-output>
+                    </module-outputs>
+                  </module-io>
+                </module>
+              </base>
+            </value-module>
+          </hosted-module>
+          <hosted-module hosted-module-id="UINT" hosted-module-ns="COMN" hosted-module-rt-id="UINT1">
+            <value-module value="15">
+              <base>
+                <module module-id="UINT" module-namespace="COMN" module-runtime-id="UINT1">
+                  <module-io>
+                    <module-inputs/>
+                    <module-outputs>
+                      <module-output output-name="value">
+                        <output-root output-name="value">
+                          <output-connection input-name="in2" module-id="addr2"/>
+                        </output-root>
+                      </module-output>
+                    </module-outputs>
+                  </module-io>
+                </module>
+              </base>
+            </value-module>
+          </hosted-module>
+          <hosted-module hosted-module-id="addr" hosted-module-ns="COMN" hosted-module-rt-id="addr2">
+            <module module-id="addr" module-namespace="COMN" module-runtime-id="addr2">
+              <module-io>
+                <module-inputs>
+                  <module-input input-name="in1">
+                    <input-connection module-runtime-id="UINT0" output-name="value"/>
+                  </module-input>
+                  <module-input input-name="in2">
+                    <input-connection module-runtime-id="UINT1" output-name="value"/>
+                  </module-input>
+                </module-inputs>
+                <module-outputs>
+                  <module-output output-name="out">
+                    <output-root output-name="out"/>
+                  </module-output>
+                </module-outputs>
+              </module-io>
+            </module>
+          </hosted-module>
+          <hosted-module hosted-module-id="cout" hosted-module-ns="COMN" hosted-module-rt-id="cout3">
+            <module module-id="cout" module-namespace="COMN" module-runtime-id="cout3">
+              <module-io>
+                <module-inputs>
+                  <module-input input-name="in"/>
+                </module-inputs>
+                <module-outputs/>
+              </module-io>
+            </module>
+          </hosted-module>
+        </hosted-modules>
+        <priority-list/>
+      </host-base>
+      <module-base>
+        <module module-id="HOST" module-namespace="HOST" module-runtime-id="ClayExeHostModule">
+          <module-io>
+            <module-inputs/>
+            <module-outputs/>
+          </module-io>
+        </module>
+      </module-base>
+      <module-specific>
+        <exported-outputs/>
+        <exported-inputs/>
+      </module-specific>
+    </host-module>
+  </modules>
+
+  <widgets>
+    <widgets>
+      <host-module-ui>
+        <host-ui-config host-ui-size-x="918" host-ui-size-y="671"/>
+        <module-widgets num-widgets="4">
+          <module-widget module-id="UINT0">
+            <widget pos-x="117" pos-y="42"/>
+          </module-widget>
+          <module-widget module-id="UINT1">
+            <widget pos-x="316" pos-y="33"/>
+          </module-widget>
+          <module-widget module-id="addr2">
+            <widget pos-x="205" pos-y="168"/>
+          </module-widget>
+          <module-widget module-id="cout3">
+            <widget pos-x="206" pos-y="316"/>
+          </module-widget>
+        </module-widgets>
+        <widget-connections widget-connections="2">
+          <widget-connection connection-from="UINT0" connection-to="addr2"/>
+          <widget-connection connection-from="UINT1" connection-to="addr2"/>
+        </widget-connections>
+      </host-module-ui>
+    </widgets>
+    <base>
+      <widget pos-x="0" pos-y="0"/>
+    </base>
+  </widgets>
+
+</host-module-ui>

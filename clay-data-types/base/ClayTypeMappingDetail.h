@@ -28,7 +28,7 @@ namespace CLAY{ namespace MODEL{ namespace ClayTypeMapping{
 template<class T>
 inline ClayTypes::Type getType()
 {
-  CLAY_FAIL(); //if you arrive here a template specialization is missing, see cpp file
+  CLAY_FAIL(); //if you arrive here a template specialization is missing, see beow
   return ClayTypes::UNKNOWN_TYPE;
 }
 
@@ -74,6 +74,13 @@ inline ClayTypes::Type getType<double>()
   return ClayTypes::DOUBLE;
 }
 
+//---------------------------------------------
+template<>
+inline ClayTypes::Type getType<std::string>()
+{
+  return ClayTypes::ASCII;
+}
+
 /****************************************************************
  * --- template specializations from CLAY type to CPP type ---- *
  ****************************************************************/
@@ -81,7 +88,7 @@ template<ClayTypes::Type>
 class ClayType
 {
 public:
-  typedef void tType; //if you arrive here a class template specialization is missing
+  typedef void tType; //if you arrive here a class template specialization is missing, s.b.
 };
 
 //---------------------------------------------
@@ -130,6 +137,14 @@ class ClayType<ClayTypes::DOUBLE>
 {
 public:
   typedef double tType;
+};
+
+//---------------------------------------------
+template<>
+class ClayType<ClayTypes::ASCII>
+{
+public:
+  typedef std::string tType;
 };
 
 } } }

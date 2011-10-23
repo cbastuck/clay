@@ -6,10 +6,7 @@ cmake_policy(SET CMP0015 OLD)
 
 PROJECT(${CLAY_TARGET})
 
-MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")
-
-FIND_PACKAGE(ClayQt4 COMPONENTS QtCore QtGui REQUIRED)
-INCLUDE(${QT_USE_FILE})
+MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
 SET(CLAY_SRC_FOLDER_BASE base/QtModuleUIRegistry.cpp      base/QtModuleUIRegistry.h
                          base/ModuleWidget.cpp            base/ModuleWidget.h 

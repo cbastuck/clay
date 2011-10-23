@@ -6,6 +6,6 @@ cmake_policy(SET CMP0015 OLD)
 
 PROJECT(${CLAY_TARGET})
 
-MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")
+MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
 ADD_SUBDIRECTORY(test-basics)

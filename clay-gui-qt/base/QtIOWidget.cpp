@@ -212,7 +212,7 @@ bool QtModuleOutputWidget::processDropRequest(QtIOWidget* pOther)
 {
   QtModuleInputWidget* pInputWidget = static_cast<QtModuleInputWidget*>(pOther);
   ModuleInputBase* pInput = pInputWidget->getModuleInput();
-  if(!pInput->isConnected() /*&& !m_pModuleOutput->isConnected()*/)
+  if(!pInput->isConnected())
   {
     return m_pModuleOutput->canConnect(pInput);
   }

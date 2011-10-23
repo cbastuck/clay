@@ -6,6 +6,21 @@ cmake_policy(SET CMP0015 OLD)
 
 PROJECT(${CLAY_TARGET})
 
-MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")
+MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
-ADD_SUBDIRECTORY(xmlrpc-c-nugget)
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+        SET(dirlist ${dirlist} ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+SUBDIRLIST(SUBDIRS ${CLAY_ROOT}/clay-nuggets)
+
+FOREACH(subdir ${SUBDIRS})
+    ADD_SUBDIRECTORY(${subdir})
+ENDFOREACH()
