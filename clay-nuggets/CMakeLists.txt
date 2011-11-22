@@ -19,8 +19,21 @@ MACRO(SUBDIRLIST result curdir)
   SET(${result} ${dirlist})
 ENDMACRO()
 
+#search for nuggets
 SUBDIRLIST(SUBDIRS ${CLAY_ROOT}/clay-nuggets)
 
 FOREACH(subdir ${SUBDIRS})
     ADD_SUBDIRECTORY(${subdir})
+ENDFOREACH()
+
+#search for tests inside nuggets
+SUBDIRLIST(SUBDIRS ${CLAY_ROOT}/clay-nuggets)
+
+FOREACH(subdir ${SUBDIRS})
+	IF(EXISTS "${CLAY_ROOT}/clay-nuggets/${subdir}/${subdir}-test")
+		ADD_SUBDIRECTORY(${CLAY_ROOT}/clay-nuggets/${subdir}/${subdir}-test)
+	ELSE()
+		MESSAGE("Warning: no tests for nugget: ${subdir} found")
+		MESSAGE("  -> missing: ${CLAY_ROOT}/clay-nuggets/${subdir}/${subdir}-test")
+	ENDIF()
 ENDFOREACH()

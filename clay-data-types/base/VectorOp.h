@@ -37,6 +37,8 @@ inline std::ostream& operator<<(std::ostream& os, const Vector<T>& aVec)
     os << aVec(i) << " ";
   }
   os << std::endl;
+
+  return os;
 }
 
 //---------------------------------------------min

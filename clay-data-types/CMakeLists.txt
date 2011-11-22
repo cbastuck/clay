@@ -24,9 +24,13 @@ SET(CLAY_BASE_SOURCES    base/ClayTypeChecking.h base/ClayTypeChecking.cpp
 					     base/MatrixOp.h
 					     base/VectorOp.h)
 
+SET(CLAY_AUDIO_SOURCES audio/SampleBuffer.h audio/SampleBuffer.cpp)
+						 
 SOURCE_GROUP(base      FILES ${CLAY_BASE_SOURCES})
+SOURCE_GROUP(audio     FILES ${CLAY_AUDIO_SOURCES})
 
-SET(CLAY_SOURCES ${CLAY_BASE_SOURCES})
+SET(CLAY_SOURCES ${CLAY_BASE_SOURCES}
+				 ${CLAY_AUDIO_SOURCES})
 
 INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
                     ${CMAKE_CURRENT_BINARY_DIR}

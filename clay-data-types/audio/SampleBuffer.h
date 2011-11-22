@@ -19,7 +19,6 @@
 #ifndef SampleBuffer_H_
 #define SampleBuffer_H_
 
-//#include <clay-data-types/base/MatrixModel.h>
 #include <clay-data-types/base/Matrix.h>
 
 #include <clay-core/base/ModuleIO.h>
@@ -41,11 +40,6 @@ public:
 
   SampleBuffer(BufferLayout eLayout=eMonoLayout);
   ~SampleBuffer();
-
-  //void init(BufferLayout eBufferLayout);
-  //void init(const SampleBuffer& aOther, unsigned int uFromSample, unsigned int uNumSamples);
-
-  //void deInit();
 
   void setLayout(BufferLayout eLayout);
   void resize(unsigned int uNumSamples);
