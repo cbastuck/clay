@@ -22,6 +22,7 @@
 
 #include <clay-data-types/base/Const.h>
 #include <clay-data-types/base/Vector.h>
+#include <clay-data-types/base/SharedData.h>
 
 namespace CLAY{ namespace MODEL{
 
@@ -44,17 +45,21 @@ public:
   Matrix(const Matrix<T>& aRhs);
   ~Matrix();
 
-  void clone(Matrix<T>& aDst) const;
+  template<unsigned int i, unsigned int j> 
+  static Matrix<T> create(T p[i][j]);
+
+  Matrix<T>& operator=(const Matrix<T>& aRhs);
+
+  Matrix<T> clone() const;
   void clear();
   void attach(const Matrix<T>& aRhs);
 
   //assignment
-  Matrix<T>& operator=(const T& aVal);
-  Matrix<T>& operator=(const Matrix<T>& aRhs);
-
-  //ownership
-  void adopt(Matrix<T>& aRhs);
-
+  Matrix<T>& set(const T& aVal);
+  Matrix<T>& set(const Matrix<T>& aRhs);
+  template<unsigned int i, unsigned int j>
+  void set(const T p[i][j]);
+  
   //matrix dimension
   unsigned int getNumRows() const;
   unsigned int getNumColumns() const;
@@ -71,10 +76,6 @@ public:
   tVector column(unsigned int uCol);
   tConstVector column(unsigned int uCol) const;
 
-  //write access
-  template<unsigned int i, unsigned int j>
-  void set(const T p[i][j]);
-
   void appendRow(const tVector& aVec);
   void appendColumn(const tVector& aVec);
 
@@ -84,20 +85,26 @@ public:
   Const< Matrix<T> > submatrix(unsigned int uRow, unsigned int uNumRows, unsigned int uCol, unsigned int uNumCols) const;
 
 protected:
+  enum
+  {
+    eNoOwnership = 1 << 0,
+  };
+
   void setNumRows(unsigned int uNumRows);
   void setNumColumns(unsigned int uNumCols);
 
   unsigned int rowOffset(unsigned int uRow) const;
   unsigned int colOffset(unsigned int uCol) const;
 
+  void deref();
+
 private:
-  T*           m_pData;
-  unsigned int m_uNumRows;
-  unsigned int m_uNumCols;
-  unsigned int m_uNumAlignedRows;
-  unsigned int m_uNumAlignedCols;
-  Alignment    m_aAlignment;
-  bool         m_bMemoryOwner;
+  SharedData<T*>* m_pData;
+  unsigned int    m_uNumRows;
+  unsigned int    m_uNumCols;
+  unsigned int    m_uNumAlignedRows;
+  unsigned int    m_uNumAlignedCols;
+  Alignment       m_aAlignment;
 };
 
 
@@ -108,29 +115,32 @@ private:
 //---------------------------------------------Matrix
 template<class T>
 inline Matrix<T>::Matrix()
-  : m_pData(NULL),
-    m_uNumRows(0),
-    m_uNumCols(0),
-    m_uNumAlignedRows(0),
-    m_uNumAlignedCols(0),
-    m_aAlignment(ROW_ALIGNMENT),
-    m_bMemoryOwner(true)
+  : m_pData(NULL)
+  , m_uNumRows(0)
+  , m_uNumCols(0)
+  , m_uNumAlignedRows(0)
+  , m_uNumAlignedCols(0)
+  , m_aAlignment(ROW_ALIGNMENT)
 {
+  m_pData = new SharedData<T*>();
+  m_pData->set(NULL); //initialize
+  m_pData->inc();
 }
 
 //---------------------------------------------Matrix
 template<class T>
 inline Matrix<T>::Matrix(unsigned int uNumRows, unsigned int uNumCols, Alignment aAlignment)
-  : m_pData(NULL),
-    m_uNumRows(uNumRows),
-    m_uNumCols(uNumCols),
-    m_uNumAlignedRows(uNumRows),
-    m_uNumAlignedCols(uNumCols),
-    m_aAlignment(aAlignment),
-    m_bMemoryOwner(true)
+  : m_pData(NULL)
+  , m_uNumRows(uNumRows)
+  , m_uNumCols(uNumCols)
+  , m_uNumAlignedRows(uNumRows)
+  , m_uNumAlignedCols(uNumCols)
+  , m_aAlignment(aAlignment)
 {
-  m_pData = new T[m_uNumRows * m_uNumCols];
-  CLAY_DEBUG(memset(m_pData, 255, m_uNumRows*m_uNumCols*sizeof(T)));
+  m_pData = new SharedData<T*>(new T[m_uNumRows * m_uNumCols]);
+  m_pData->inc();
+
+  CLAY_DEBUG(memset(m_pData->get(), 255, m_uNumRows*m_uNumCols*sizeof(T)));
 }
 
 //---------------------------------------------Matrix
@@ -141,46 +151,87 @@ inline Matrix<T>::Matrix(const Matrix<T>& aRhs)
     m_uNumCols(0),
     m_uNumAlignedRows(0),
     m_uNumAlignedCols(0),
-    m_aAlignment(ROW_ALIGNMENT),
-    m_bMemoryOwner(false)
+    m_aAlignment(ROW_ALIGNMENT)
 {
-  attach(aRhs); //copies are never memory owners - they just use the memory of another
+  operator=(aRhs);
 }
 
 //---------------------------------------------~Matrix
 template<class T>
 inline Matrix<T>::~Matrix()
 {
-  clear();
+  deref();
 }
 
-//---------------------------------------------operator()
+//---------------------------------------------create
 template<class T>
-inline void Matrix<T>::clone(Matrix<T>& aDst) const
+template<unsigned int i, unsigned int j> 
+inline Matrix<T> Matrix<T>::create(T p[i][j])
 {
-  aDst.m_aAlignment      = m_aAlignment;
-  aDst.m_uNumRows        = m_uNumRows;
-  aDst.m_uNumCols        = m_uNumCols;
-  aDst.m_uNumAlignedRows = m_uNumAlignedRows;
-  aDst.m_uNumAlignedCols = m_uNumAlignedCols;
-  aDst.m_bMemoryOwner = true;
+  Matrix<T> aDst;
 
+  aDst.m_uNumRows = i;
+  aDst.m_uNumCols = j;
+  aDst.m_uNumAlignedRows = i;
+  aDst.m_uNumAlignedCols = j;
+  aDst.m_aAlignment = ROW_ALIGNMENT;
+
+  aDst.m_pData->set((float*)p);
+  aDst.m_pData->addFlag(eNoOwnership);
+
+  return aDst;
+}
+
+
+//---------------------------------------------operator=
+template<class T>
+inline Matrix<T>& Matrix<T>::operator=(const Matrix<T>& aRhs)
+{
+  if(aRhs.m_pData != m_pData)
+  {
+    deref();
+    m_pData = aRhs.m_pData;
+    m_pData->inc();
+
+    m_uNumRows        = aRhs.m_uNumRows;
+    m_uNumCols        = aRhs.m_uNumCols;
+    m_uNumAlignedRows = aRhs.m_uNumAlignedRows;
+    m_uNumAlignedCols = aRhs.m_uNumAlignedCols;
+    m_aAlignment      = aRhs.m_aAlignment;
+  }
+  return *this;
+}
+
+//---------------------------------------------clone
+template<class T>
+inline Matrix<T> Matrix<T>::clone() const
+{
+  Matrix<T> aCpy;
+
+  aCpy.m_aAlignment      = m_aAlignment;
+  aCpy.m_uNumRows        = m_uNumRows;
+  aCpy.m_uNumCols        = m_uNumCols;
+  aCpy.m_uNumAlignedRows = m_uNumAlignedRows;
+  aCpy.m_uNumAlignedCols = m_uNumAlignedCols;
+  
   unsigned int uSize = m_uNumAlignedRows * m_uNumAlignedCols;
-  aDst.m_pData = new T[uSize];
-  memcpy(aDst.m_pData, m_pData, uSize * sizeof(T));
+  aCpy.m_pData->setData(new T[uSize]);
+  aCpy.m_pData->inc();
+
+  memcpy(aCpy.m_pData->get(), m_pData->get(), uSize * sizeof(T));
+
+  return aCpy;
 }
 
 //---------------------------------------------clear
 template<class T>
 inline void Matrix<T>::clear()
 {
-  if(m_bMemoryOwner && m_pData)
-  {
-    CLAY_DEBUG(memset(m_pData, 255, m_uNumRows*m_uNumCols*sizeof(T)));
-    delete[] m_pData;
-  }
+  deref();
 
-  m_pData = NULL;
+  m_pData = new SharedData<T*>();
+  m_pData->inc();
+
   m_uNumRows = 0;
   m_uNumCols = 0;
   m_uNumAlignedRows = 0;
@@ -191,73 +242,46 @@ inline void Matrix<T>::clear()
 template<class T>
 inline void Matrix<T>::attach(const Matrix<T>& aRhs)
 {
-  if(m_bMemoryOwner && m_pData)
-  {
-    delete[] m_pData;
-  }
-
-  m_pData           = aRhs.m_pData;
-  m_uNumRows        = aRhs.m_uNumRows;
-  m_uNumCols        = aRhs.m_uNumCols;  
-  m_aAlignment      = aRhs.m_aAlignment;
-  m_bMemoryOwner    = false;
-  m_uNumAlignedRows = aRhs.m_uNumAlignedRows;
-  m_uNumAlignedCols = aRhs.m_uNumAlignedCols;
+  //TODO: remove
+  operator=(aRhs); 
 }
 
-//---------------------------------------------operator()
+//---------------------------------------------set
 template<class T>
-inline Matrix<T>& Matrix<T>::operator=(const T& aVal)
+inline Matrix<T>& Matrix<T>::set(const T& aVal)
 {
+  T* pData = m_pData->get();
   for(unsigned int i=0, n=m_uNumRows*m_uNumCols; i<n; ++i)
   {
-    m_pData[i] = aVal;
+    pData[i] = aVal;
   }
   return *this;
 }
 
-//---------------------------------------------operator()
+//---------------------------------------------set
 template<class T>
-inline Matrix<T>& Matrix<T>::operator=(const Matrix<T>& aRhs)
+inline Matrix<T>& Matrix<T>::set(const Matrix<T>& aRhs)
 {
   CLAY_ASSERT(m_uNumRows == aRhs.m_uNumRows);
   CLAY_ASSERT(m_uNumCols == aRhs.m_uNumCols);
-  if(m_aAlignment == ROW_ALIGNMENT) //optimize according alignment
+  for(unsigned int i=0; i<m_uNumRows; ++i)
   {
-    for(unsigned int i=0; i<m_uNumRows; ++i)
+    for(unsigned int j=0; j<m_uNumCols; ++j)
     {
-      row(i) = aRhs.row(i);
-    }
-  }
-  else if(m_aAlignment == COLUMN_ALIGNMENT)
-  {
-    for(unsigned int i=0; i<m_uNumCols; ++i)
-    {
-      column(i) = aRhs.column(i);
+      (*this)(i, j) = aRhs(i, j);
     }
   }
   return *this;
 }
 
-//---------------------------------------------adopt
+//---------------------------------------------set
 template<class T>
-void Matrix<T>::adopt(Matrix<T>& aRhs)
+template<unsigned int i, unsigned int j>
+inline void Matrix<T>::set(const T p[i][j])
 {
-  CLAY_ASSERT(aRhs.m_bMemoryOwner); //can only adopt if ownership is correct
-  if(m_pData && m_bMemoryOwner)
-  {
-    delete[] m_pData;
-  }
-
-  m_pData           = aRhs.m_pData;
-  m_uNumRows        = aRhs.m_uNumRows;
-  m_uNumCols        = aRhs.m_uNumCols;
-  m_uNumAlignedRows = aRhs.m_uNumAlignedRows;
-  m_uNumAlignedCols = aRhs.m_uNumAlignedCols;
-  m_aAlignment      = aRhs.m_aAlignment;
-
-  m_bMemoryOwner      = true;
-  aRhs.m_bMemoryOwner = false; //ownserhip transferred
+  CLAY_ASSERT(m_uNumRows == i);
+  CLAY_ASSERT(m_uNumCols == j);
+  memcpy(m_pData->get(), p, i*j * sizeof(T));
 }
 
 //---------------------------------------------operator()
@@ -296,30 +320,29 @@ inline void Matrix<T>::resize(unsigned int uNumRows, unsigned int uNumCols, cons
   Matrix<T> aResized(uNumRows, uNumCols, m_aAlignment);
   if(pVal)
   {
-    aResized = *pVal; //set the default entry for new elements if available
+    aResized.set(*pVal); //set the default entry for new elements if available
   }
   if(uNumRows <= m_uNumRows && uNumCols <= m_uNumCols) //matrix shrinks
   {
-    Matrix<T> aSubmat = submatrix(0, uNumRows, 0, uNumCols);
-    aResized = aSubmat;
+    aResized.set(submatrix(0, uNumRows, 0, uNumCols));
   }
   else if(uNumRows >=m_uNumRows && uNumCols >= m_uNumCols) //matrix grows
   {
     Matrix<T> aSubmat = aResized.submatrix(0, m_uNumRows, 0, m_uNumCols);
-    aSubmat = *this;
+    aSubmat.set(*this);
   }
-  else if(uNumRows < uNumRows && uNumCols > m_uNumCols) //rows shrink, columns grow
+  else if(uNumRows < m_uNumRows && uNumCols > m_uNumCols) //rows shrink, columns grow
   {
-    Matrix<T> aSubmat = submatrix(0, uNumRows, 0, m_uNumCols);
-    aResized = aSubmat;
+    Matrix<T> aSubmat = aResized.submatrix(0, uNumRows, 0, m_uNumCols);
+    aSubmat.set(submatrix(0, uNumRows, 0, m_uNumCols));
   }
   else if(uNumRows > m_uNumRows && uNumCols < m_uNumCols) //rows grow, columns shrink
   {
     Matrix<T> aSubmat = aResized.submatrix(0, m_uNumRows, 0, uNumCols);
-    aSubmat = *this;
+    aSubmat.set(submatrix(0, m_uNumRows, 0, uNumCols));
   }
 
-  adopt(aResized);
+  operator=(aResized);
 }
 
 //---------------------------------------------reserve
@@ -347,7 +370,7 @@ inline const T& Matrix<T>::operator()(unsigned int uRow, unsigned int uCol) cons
 {
   CLAY_ASSERT(uRow < m_uNumRows);
   CLAY_ASSERT(uCol < m_uNumCols);
-  return m_pData[rowOffset(uRow) + colOffset(uCol)];
+  return m_pData->get()[rowOffset(uRow) + colOffset(uCol)];
 }
 
 //---------------------------------------------row
@@ -356,7 +379,7 @@ inline typename Matrix<T>::tVector Matrix<T>::row(unsigned int uRow)
 {
   CLAY_ASSERT(uRow < m_uNumRows);
   unsigned int uOffset = (m_aAlignment == ROW_ALIGNMENT) ? 1 : m_uNumRows;
-  return tVector(&m_pData[rowOffset(uRow)], uOffset, m_uNumCols);
+  return tVector(&m_pData->get()[rowOffset(uRow)], uOffset, m_uNumCols);
 }
 
 //---------------------------------------------row
@@ -373,7 +396,7 @@ inline typename Matrix<T>::tVector Matrix<T>::column(unsigned int uCol)
 {
   CLAY_ASSERT(uCol < m_uNumCols);
   unsigned int uOffset = (m_aAlignment == ROW_ALIGNMENT) ? m_uNumCols : 1;
-  return tVector(&m_pData[colOffset(uCol)], uOffset, m_uNumRows);
+  return tVector(&m_pData->get()[colOffset(uCol)], uOffset, m_uNumRows);
 }
 
 //---------------------------------------------column
@@ -382,16 +405,6 @@ inline typename Matrix<T>::tConstVector Matrix<T>::column(unsigned int uCol) con
 {
   tVector aVec = const_cast<Matrix<T>*>(this)->column(uCol); //const-ness is preserved
   return Const<tVector>(aVec);
-}
-
-//---------------------------------------------operator()
-template<class T>
-template<unsigned int i, unsigned int j>
-inline void Matrix<T>::set(const T p[i][j])
-{
-  CLAY_ASSERT(m_uNumRows == i);
-  CLAY_ASSERT(m_uNumCols == j);
-  memcpy(m_pData, p, i*j * sizeof(T));
 }
 
 //---------------------------------------------appendRow
@@ -432,8 +445,9 @@ inline Matrix<T> Matrix<T>::submatrix(unsigned int uRow, unsigned int uNumRows, 
   aMat.m_uNumAlignedRows = m_uNumRows;
   aMat.m_uNumAlignedCols = m_uNumCols;
   aMat.m_aAlignment      = m_aAlignment;
-  aMat.m_bMemoryOwner    = false;
-  aMat.m_pData           = m_pData + rowOffset(uRow) + colOffset(uCol);
+
+  aMat.m_pData->set(m_pData->get() + rowOffset(uRow) + colOffset(uCol));
+  aMat.m_pData->addFlag(eNoOwnership);
 
   return aMat;
 }
@@ -472,6 +486,21 @@ template<class T>
 inline unsigned int Matrix<T>::colOffset(unsigned int uCol) const
 {
   return (m_aAlignment == ROW_ALIGNMENT) ? uCol : (uCol * m_uNumAlignedRows);
+}
+
+//---------------------------------------------deref
+template<class T>
+inline void Matrix<T>::deref()
+{
+  CLAY_ASSERT(!m_pData || m_pData->count());
+  if(m_pData && m_pData->dec() == 0)
+  {
+    if(!m_pData->testFlag(eNoOwnership))
+    {
+      delete[] m_pData->get(); //do the wall-e
+    }
+    delete m_pData;
+  }
 }
 
 } }

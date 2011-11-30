@@ -16,13 +16,13 @@ SET(CLAY_BASE_SOURCES    base/ClayTypeChecking.h base/ClayTypeChecking.cpp
 					     base/ClayTypeConversion.h base/ClayTypeConversion.cpp
 					     base/ClayTypeMapping.h 
                          base/ClayTypeMappingDetail.h
-					     base/MatrixModel.h
                          base/MemoryOwner.cpp base/MemoryOwner.h
 					     base/Matrix.h
 					     base/Vector.h
 					     base/Const.h
 					     base/MatrixOp.h
-					     base/VectorOp.h)
+					     base/VectorOp.h
+						 base/SharedData.h)
 
 SET(CLAY_AUDIO_SOURCES audio/SampleBuffer.h audio/SampleBuffer.cpp)
 						 
