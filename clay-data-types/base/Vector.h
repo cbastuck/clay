@@ -29,6 +29,8 @@ template<class T>
 class Vector
 {
 public:
+  typedef T tValueType;
+
   Vector();
   Vector(unsigned int uSize);
   Vector(T* p, unsigned int uStepwidth, unsigned int uNum);

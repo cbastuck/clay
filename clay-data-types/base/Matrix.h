@@ -30,6 +30,7 @@ template<class T>
 class Matrix
 {
 public:
+  typedef T              tValueType;
   typedef Vector<T>      tVector;
   typedef Const<tVector> tConstVector;
 
