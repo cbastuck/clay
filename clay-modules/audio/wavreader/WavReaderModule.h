@@ -49,9 +49,9 @@ public:
 
   virtual ProcessResultCode process();
 
-  bool loadWAV(const tString& sFn);
+  bool loadWAV(const tString& sFn, bool bNormalize=false);
 
-  bool loadWAV(const tString& sFn, tSampleBuffer& aDst);
+  static bool loadWAV(const tString& sFn, tSampleBuffer& aDst, bool bNormalize=false);
 
 private:
   

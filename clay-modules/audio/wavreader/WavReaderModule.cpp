@@ -73,19 +73,19 @@ Module::ProcessResultCode WavReaderModule::process()
 }
 
 //---------------------------------------------loadWAV
-bool WavReaderModule::loadWAV(const tString& sFn)
+bool WavReaderModule::loadWAV(const tString& sFn, bool bNormalize)
 {
   if(getNumOutputs())
   {
     ModuleOutputBase* pOut = tBase::getOutput(0);
     tOutputType* pOutType  = static_cast<tOutputType*>(pOut);
-    return loadWAV(sFn, pOutType->getData());
+    return loadWAV(sFn, pOutType->getData(), bNormalize);
   }
   return false;
 }
 
 //---------------------------------------------loadWAV
-bool WavReaderModule::loadWAV(const tString& sFn, tSampleBuffer& aSampleBuffer)
+bool WavReaderModule::loadWAV(const tString& sFn, tSampleBuffer& aSampleBuffer, bool bNormalize)
 {
   char buffer[4];
   std::ifstream is(sFn.c_str(), std::ios::binary);
@@ -135,6 +135,12 @@ bool WavReaderModule::loadWAV(const tString& sFn, tSampleBuffer& aSampleBuffer)
     is.read(reinterpret_cast<char*>(&sample), sizeof(short));
     aSampleBuffer.setSample(0, i, (float)sample / (float)std::numeric_limits<short>::max());
   }
+
+  if(bNormalize)
+  {
+    aSampleBuffer.normalize();
+  }
+
   return true;
 }
 

@@ -33,9 +33,9 @@ private:
                        HELPER::IntegerEncoding<'M','P','3','R'>::value,
                        HELPER::IntegerEncoding<'A','U','I','O'>::value > tBase;
 
+public:
   typedef MODEL::SampleBufferOutput tOutputType;
 
-public:
   MP3ReaderModule(const tString& sRuntimeID);
 
   virtual void registerModuleOutputs();
