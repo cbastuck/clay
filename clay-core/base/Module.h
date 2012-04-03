@@ -81,10 +81,10 @@ public:
   CLAY_DLL_EXPORT virtual bool saveModuleOutput(XERCES::DOMElement* pParent, ModuleOutputBase* pModuleOutput);
   CLAY_DLL_EXPORT virtual bool loadModuleOutput(XERCES::DOMElement* pNode, tConnectionMap* pOutputConnections = NULL);
 
-  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (tSize i);
-  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (const tString& sInputName);
-  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(tSize i);
-  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(const tString& sOutputName);
+  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (tSize i) const;
+  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (const tString& sInputName) const;
+  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(tSize i) const;
+  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(const tString& sOutputName) const;
   CLAY_DLL_EXPORT virtual ModuleOutputBase* duplicateModuleOutput(ModuleOutputBase* pOriginal);
 
   enum ConnectionStrategy{ CLEVER_CONNECT_MODE, TEST_CLEVER_CONNECT_MODE };

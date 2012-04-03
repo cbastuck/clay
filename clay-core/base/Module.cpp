@@ -290,17 +290,17 @@ bool Module::loadModuleOutput(XERCES::DOMElement* pNode, tConnectionMap* pOutput
 }
 
 //---------------------------------------------getInput
-ModuleInputBase* Module::getInput(tSize i)
+ModuleInputBase* Module::getInput(tSize i) const
 {
   CLAY_ASSERT(i < getNumInputs());
   return m_collInputs[i];
 }
 
 //---------------------------------------------getInput
-ModuleInputBase*  Module::getInput(const tString& sInputName)
+ModuleInputBase*  Module::getInput(const tString& sInputName) const
 {
-  tInputCollection::iterator it  = m_collInputs.begin();
-  tInputCollection::iterator end = m_collInputs.end();
+  tInputCollection::const_iterator it  = m_collInputs.begin();
+  tInputCollection::const_iterator end = m_collInputs.end();
   for(; it!=end; ++it)
   {
     ModuleInputBase* pInput = *it;
@@ -313,17 +313,17 @@ ModuleInputBase*  Module::getInput(const tString& sInputName)
 }
 
 //---------------------------------------------getOutput
-ModuleOutputBase* Module::getOutput(tSize i)
+ModuleOutputBase* Module::getOutput(tSize i) const
 {
   CLAY_ASSERT(i < getNumOutputs());
   return m_collOutputs[i];
 }
 
 //---------------------------------------------getOutput
-ModuleOutputBase* Module::getOutput(const tString& sOutputName)
+ModuleOutputBase* Module::getOutput(const tString& sOutputName) const
 {
-  tOutputCollection::iterator it  = m_collOutputs.begin();
-  tOutputCollection::iterator end = m_collOutputs.end();
+  tOutputCollection::const_iterator it  = m_collOutputs.begin();
+  tOutputCollection::const_iterator end = m_collOutputs.end();
   for(; it!=end; ++it)
   {
     ModuleOutputBase* pOutput = *it;
