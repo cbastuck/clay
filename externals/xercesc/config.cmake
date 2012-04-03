@@ -8,9 +8,9 @@
 #
 
 if(MSVC) #(1)
-	SET(CLAY_XERCES_LIB    	${CLAY_EXTERNALS_DIR}/xerces-c-3.1.0/Build/Win32/VC9/Release/xerces-c_3.lib)
-	SET(CLAY_XERCES_LIB_D  	${CLAY_EXTERNALS_DIR}/xerces-c-3.1.0/Build/Win32/VC9/Debug/xerces-c_3D.lib)
-	SET(CLAY_XERCES_INCLUDE ${CLAY_EXTERNALS_DIR}/xerces-c-3.1.0/src) 
+	SET(CLAY_XERCES_LIB    	C:/ClayGithub/externals/bin/x86/Release/xerces-c_3.lib)
+	SET(CLAY_XERCES_LIB_D  	C:/ClayGithub/externals/bin/x86/Debug/xerces-c_3D.lib)
+	SET(CLAY_XERCES_INCLUDE C:/ClayGithub/externals/xercesc/xerces-c-3.1.1/src) 
 endif(MSVC)
 
 if(EXISTS "$ENV{CLAY_XERCES_INCLUDE}") #(2)
