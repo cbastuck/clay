@@ -39,7 +39,6 @@ public:
 
   //assignment
   Vector<T>& operator=(const Vector<T>& aRhs);
-  Vector<T>& operator=(const T& v);
 
   //ownership
   void adopt(Vector<T>& aRhs);
@@ -48,6 +47,7 @@ public:
   template<unsigned int i>
   void set(T p[i]);
   void set(const Vector<T>& aRhs);
+  void set(const T& v);
 
   T& operator()(unsigned int i);
   const T& operator()(unsigned int i) const;
@@ -60,6 +60,9 @@ public:
 
   Vector<T> subvector(unsigned int uPos, unsigned int uNum);
   Const< Vector<T> > subvector(unsigned int uPos, unsigned int uNum) const;
+
+  void normalize();
+  T getMaxValue() const;
 
 protected:
   enum
@@ -153,18 +156,6 @@ inline Vector<T>& Vector<T>::operator=(const Vector<T>& aRhs)
   return *this;
 }
 
-//---------------------------------------------operator=
-template<class T>
-inline Vector<T>& Vector<T>::operator=(const T& aRhs)
-{
-  for(unsigned int i=0; i<m_uNum; ++i)
-  {
-    operator()(i) = aRhs(i);
-  }
-
-  return *this;
-}
-
 //---------------------------------------------adopt
 template<class T>
 inline void Vector<T>::adopt(Vector<T>& aRhs)
@@ -196,6 +187,16 @@ inline void Vector<T>::set(const Vector<T>& aRhs)
     {
       operator()(i) = aRhs(i);
     }
+  }
+}
+
+//---------------------------------------------set
+template<class T>
+inline void Vector<T>::set(const T& aVal)
+{
+  for(unsigned int i=0; i<m_uNum; ++i)
+  {
+    operator()(i) = aVal;
   }
 }
 
@@ -297,6 +298,50 @@ inline void Vector<T>::deref()
     }
     delete m_pData;
   }
+}
+
+//---------------------------------------------deref
+template<class T>
+inline void Vector<T>::normalize()
+{
+  //step1: accumulate the elements
+  T aAcc = static_cast<T>(0);
+  unsigned int n=size();
+  for(unsigned int i=0; i<n; ++i)
+  {
+    aAcc += operator()(i);
+  }
+
+  //step2: devide by accumulate value
+  for(unsigned int i=0; i<n; ++i)
+  {
+    operator()(i) /= aAcc;
+  }
+}
+
+//---------------------------------------------
+template<class T>
+inline T Vector<T>::getMaxValue() const
+{
+  if(m_uStepwidth == 1)
+  {
+    return *std::max_element(m_pData->get(), m_pData->get()+m_uNum);
+  }
+  else if(m_uNum)
+  {
+    T* ptr = m_pData->get();
+    T tMax = ptr[0];
+    for(unsigned int i=1; i<m_uNum; ++i)
+    {
+      if(ptr[i] > tMax)
+      {
+        tMax = ptr[i];
+      }
+    }
+    return tMax;
+  }
+  CLAY_FAIL();
+  return 0;
 }
 
 } }

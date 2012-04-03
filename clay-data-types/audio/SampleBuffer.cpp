@@ -115,18 +115,6 @@ void SampleBuffer::reserve(unsigned int uNumSamples)
   tBase::reserve(getNumChannels(), uNumSamples);
 }
 
-//---------------------------------------------operator[]
-const SampleBuffer::tChannel SampleBuffer::getSamples(unsigned int uChannel)
-{
-  return tBase::row(uChannel);
-}
-
-//---------------------------------------------getSample
-const SampleBuffer::tSample& SampleBuffer::getSample(unsigned int uChannel, unsigned int uIdx) const
-{
-  return tBase::operator()(uChannel, uIdx);
-}
-
 //---------------------------------------------setSample
 void SampleBuffer::setSample(unsigned int uChannel, unsigned int uIdx, tSample aSample)
 {
@@ -163,22 +151,22 @@ SampleBuffer::BufferLayout SampleBuffer::getLayout() const
   return m_eBufferLayout;
 }
 
-/*
 //---------------------------------------------writeRaw
 bool SampleBuffer::writeRaw(const tString& sRawFn)
 {
-  std::ofstream os(sRawFn.c_str(), std::ios::binary | std::ios::out);
+  std::ofstream os(sRawFn.c_str(), std::ios::binary | std::ios::out); 
   if(os)
   {
+    unsigned int uNumSamples = getNumSamples();
     for(unsigned int i=0, n=getNumChannels(); i<n; ++i)
     {
-      tBase::writeRowRaw(i, os);
+      tChannel aChan = getSamples(i);
+      os.write(reinterpret_cast<const char*>(&aChan(0)), uNumSamples * sizeof(tSample));
     }
     return true;
   }
   return false;
 }
-*/
 
 //---------------------------------------------createClip
 SampleBuffer SampleBuffer::createClip(unsigned int uStartSample, unsigned int uNumSamples, unsigned int uNumChannels)
@@ -194,6 +182,60 @@ SampleBuffer SampleBuffer::createClip(unsigned int uStartSample, unsigned int uN
   aRes.m_eBufferLayout = (uNumChannels == 1) ? eMonoLayout : eStereoLayout;
 
   return aRes;
+}
+
+//---------------------------------------------createClip
+Const<SampleBuffer> SampleBuffer::createClip(unsigned int uStartSample, unsigned int uNumSamples, unsigned int uNumChannels) const
+{
+  SampleBuffer* pThis = const_cast<SampleBuffer*>(this);
+  return Const<SampleBuffer>(pThis->createClip(uStartSample, uNumSamples, uNumChannels));
+}
+
+//---------------------------------------------createSilence
+void SampleBuffer::createSilence(unsigned int uNumSamples)
+{
+  if(getNumSamples() < uNumSamples)
+  {
+    resize(uNumSamples);
+  }
+
+  for(unsigned int i=0, n=getNumChannels(); i<n; ++i)
+  {
+    tChannel aChan = getSamples(i);
+    for(unsigned int j=0; j<uNumSamples; ++j)
+    {
+      aChan(j) = 0.f;
+    }
+  }
+}
+
+//---------------------------------------------normalize
+void SampleBuffer::normalize()
+{
+  //step1: find max value
+  tSample aMax = static_cast<tSample>(0); 
+  for(unsigned int i=0, n=getNumChannels(); i<n; ++i)
+  {
+    tChannel aChan = getSamples(i);
+    for(unsigned int j=0, m=aChan.size();  j<m; ++j)
+    {
+      tSample x = abs(aChan(j));
+      if(x > aMax)
+      {
+        aMax = x;
+      }
+    }
+  }
+
+  //step2: normalize via deviding by max
+  for(unsigned int i=0, n=getNumChannels(); i<n; ++i)
+  {
+    tChannel aChan = getSamples(i);
+    for(unsigned int j=0, m=aChan.size();  j<m; ++j)
+    {
+      aChan(j) /= aMax;
+    }
+  }
 }
 
 //---------------------------------------------getNumChannels

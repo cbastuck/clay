@@ -45,8 +45,9 @@ public:
   void resize(unsigned int uNumSamples);
   void reserve(unsigned int uNumSamples);
 
-  const tChannel getSamples(unsigned int uChannel);
-  const tSample& getSample(unsigned int uChannel, unsigned int uIdx) const;
+  tChannel getSamples(unsigned int uChannel); //inline 
+  const tChannel getSamples(unsigned int uChannel) const; //inline 
+  const tSample& getSample(unsigned int uChannel, unsigned int uIdx) const; //inline
 
   void setSample(unsigned int uChannel, unsigned int uIdx, tSample aSample);
 
@@ -58,9 +59,13 @@ public:
 
   BufferLayout getLayout() const;
 
-  //bool writeRaw(const tString& sRawFn);
+  bool writeRaw(const tString& sRawFn);
 
   SampleBuffer createClip(unsigned int uStartSample, unsigned int uNumSamples, unsigned int uNumChannels);
+  Const<SampleBuffer> createClip(unsigned int uStartSample, unsigned int uNumSamples, unsigned int uNumChannels) const;
+
+  void createSilence(unsigned int uNumSamples);
+  void normalize();
 
 protected:
   unsigned int getNumChannels(BufferLayout eLayout) const;
@@ -70,15 +75,41 @@ private:
   unsigned int m_uSampleRate;
 };
 
+//---------------------------------------------
+//---------------------------------------------
+//---------------------------------------------
 
-//--------------------------------
+//---------------------------------------------getSamples
+inline SampleBuffer::tChannel SampleBuffer::getSamples(unsigned int uChannel)
+{
+  return tBase::row(uChannel);
+}
+
+//---------------------------------------------getSamples
+inline const SampleBuffer::tChannel SampleBuffer::getSamples(unsigned int uChannel) const
+{
+  return tBase::row(uChannel);
+}
+
+//---------------------------------------------getSample
+inline const SampleBuffer::tSample& SampleBuffer::getSample(unsigned int uChannel, unsigned int uIdx) const
+{
+  return tBase::operator()(uChannel, uIdx);
+}
+
+
+//---------------------------------------------
+//---------------------------------------------
+//---------------------------------------------
 
 class SampleBufferOutput : public ModuleOutput<SampleBuffer>
 {
 public:
 };
 
-//--------------------------------
+//---------------------------------------------
+//---------------------------------------------
+//---------------------------------------------
 
 class SampleBufferOutputPtr : public TypedModuleOutput<SampleBuffer>
 {
@@ -88,7 +119,9 @@ public:
     : tBase(pSampleBuffer){}
 };
 
-//--------------------------------
+//---------------------------------------------
+//---------------------------------------------
+//---------------------------------------------
 
 class SampleBufferConstOutput : public TypedModuleOutput<const SampleBuffer>
 {
@@ -98,7 +131,9 @@ public:
     : tBase(pData){}
 };
 
-//--------------------------------
+//---------------------------------------------
+//---------------------------------------------
+//---------------------------------------------
 
 class SampleBufferInput : public ModuleInput<SampleBuffer>
 {
