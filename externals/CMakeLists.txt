@@ -8,3 +8,6 @@ PROJECT(${CLAY_TARGET})
 
 INCLUDE(boost/config.cmake)
 INCLUDE(xercesc/config.cmake)
+INCLUDE(mad/config.cmake)
+INCLUDE(asio/config.cmake)
+INCLUDE(portaudio/config.cmake)
