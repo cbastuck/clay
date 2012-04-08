@@ -443,8 +443,8 @@ inline Matrix<T> Matrix<T>::submatrix(unsigned int uRow, unsigned int uNumRows, 
 
   aMat.m_uNumRows        = uNumRows;
   aMat.m_uNumCols        = uNumCols;
-  aMat.m_uNumAlignedRows = m_uNumRows;
-  aMat.m_uNumAlignedCols = m_uNumCols;
+  aMat.m_uNumAlignedRows = m_uNumAlignedRows;
+  aMat.m_uNumAlignedCols = m_uNumAlignedCols;
   aMat.m_aAlignment      = m_aAlignment;
 
   aMat.m_pData->set(m_pData->get() + rowOffset(uRow) + colOffset(uCol));

@@ -22,6 +22,8 @@
 #include <clay-core/arch/Platform.h>
 #include <clay-core/base/ClayDefines.h>
 
+#include <vector>
+
 #if CLAY_PLATFORM_WIN32
   #include <Windows.h>
 #endif 

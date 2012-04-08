@@ -245,7 +245,7 @@ bool MP3ReaderModule::loadMP3(const tString& sFn, MODEL::SampleBuffer& aDst)
 
     bool bSuccess = decode(pBuffer, uNumBytes, aDst);
     //aDst.writeRaw(sFn + ".raw"); //TESTING
-    delete pBuffer;
+    delete[] pBuffer;
     return bSuccess;
   }
 

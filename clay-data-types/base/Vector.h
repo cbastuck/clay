@@ -296,7 +296,8 @@ inline void Vector<T>::deref()
     {
       delete[] m_pData->get(); //do the wall-e
     }
-    delete m_pData;
+    delete m_pData; //not done in d'tor, but only if counter is 0
+    m_pData = NULL;
   }
 }
 
