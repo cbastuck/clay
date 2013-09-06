@@ -5,14 +5,14 @@
 # the environment variables override the automatic and default configuration in this file
 #
 
-find_package( Boost 1.41.0 ) 
+#find_package( Boost 1.41.0 ) 
 
 if(Boost_FOUND)
 	SET(CLAY_BOOST_INCLUDE ${Boost_INCLUDE_DIRS}) #(1)	
 	SET(CLAY_BOOST_LIBPATH ${Boost_LIBRARIES})
 else() 
-	SET(CLAY_BOOST_INCLUDE C:/clay/externals/boost-1.41.0.cmake) #(3)
-	SET(CLAY_BOOST_LIBPATH C:/clay/externals/boost-1.41.0.cmake/build/lib)
+	SET(CLAY_BOOST_INCLUDE ${CLAY_EXTERNALS_DIR}/boost/boost_1_54_0) #(3)
+	SET(CLAY_BOOST_LIBPATH ${CLAY_EXTERNALS_DIR}/boost/boost_1_54_0/stage/lib)
 endif()
 
 if(EXISTS "$ENV{CLAY_BOOST_INCLUDE}") 

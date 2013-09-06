@@ -55,9 +55,9 @@ endif()
 #---------------------------------------------------------------
 
 ADD_SUBDIRECTORY(clay-core)
-ADD_SUBDIRECTORY(clay-modules)
-ADD_SUBDIRECTORY(clay-data-types)
-ADD_SUBDIRECTORY(clay-test)
+#ADD_SUBDIRECTORY(clay-modules)
+#ADD_SUBDIRECTORY(clay-data-types)
+#ADD_SUBDIRECTORY(clay-test)
 
 #---------------- gui-related clay projects -------------------
 IF(QT4_FOUND)
