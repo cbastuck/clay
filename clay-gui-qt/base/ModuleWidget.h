@@ -97,9 +97,6 @@ public:
   const Module* getModule() const; //inline 
 
   //callbacks
-  void onModuleActiveStateChanged(bool bActive);
-  void onModuleInitStateChanged(bool bInitialized);
-
   void onModuleInputRegistered  (ModuleInputBase* pInput);
   void onModuleInputUnregistered(ModuleInputBase* pInput);
   void onModuleInputConnected   (ModuleInputBase* pInput);
@@ -148,9 +145,7 @@ protected:
 
   void processModuleInputReceive(QDropEvent* pEvent);
   void processModuleOutputReceive(QDropEvent* pEvent);
-
-  bool widgetInActiveState();
-
+  
   void alignInputWidgets();
   void alignOutputWidgets();
 
@@ -161,7 +156,6 @@ private:
   bool m_bLeftButtonPressed;
   Ui::ModuleWidgetUI* m_pUi;
   Host* m_pHost;
-  int m_iStateActiveCounter;
   QTimer m_aTimer;
 
   typedef std::map<ModuleInputBase*, QWidget*> tInputsCollection;

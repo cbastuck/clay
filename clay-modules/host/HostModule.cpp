@@ -25,10 +25,16 @@
 
 namespace CLAY{ namespace MODULE{
 
+//---------------------------------------------
+const char* HostModule::staticModuleURI()
+{
+  return "http://claymodules.org/host";
+}
+
 //---------------------------------------------HostModule
 HostModule::HostModule(const tString& sId) 
-  : tModuleBase(sId),
-    tHostBase(new ModuleRegistry),
+  : Module(sId),
+    Host(new ModuleRegistry),
     m_bModuleRegistryOwner(true),
     m_pRuntimeExecutable(NULL),
     m_pPendingExecutable(NULL),
@@ -39,8 +45,8 @@ HostModule::HostModule(const tString& sId)
 
 //---------------------------------------------HostModule
 HostModule::HostModule(const tString& sId, ModuleRegistry* pModuleRegistry)
-  : tModuleBase(sId),
-    tHostBase(pModuleRegistry),
+  : Module(sId),
+    Host(pModuleRegistry),
     m_bModuleRegistryOwner(false),
     m_pRuntimeExecutable(NULL),
     m_pPendingExecutable(NULL),
@@ -57,13 +63,22 @@ HostModule::~HostModule()
   }
 }
 
+//---------------------------------------------
+const char* HostModule::getModuleURI() const
+{
+  return staticModuleURI();
+}
+
 //---------------------------------------------init
 bool HostModule::init(XERCES::DOMNode* pNode)
 {
-  if(tHostBase::init())
+  if(Host::init())
   {
-    return tModuleBase::init(pNode);
+    return Module::init(pNode);
   }
+
+  registerModuleInputs();
+  registerModuleOutputs();
 
   return false;
 }
@@ -72,8 +87,8 @@ bool HostModule::init(XERCES::DOMNode* pNode)
 void HostModule::deInit()
 {
   closeProject();
-  tHostBase::deInit();
-  tModuleBase::deInit();
+  Host::deInit();
+  Module::deInit();
 }
 
 //---------------------------------------------save
@@ -82,13 +97,13 @@ bool HostModule::save(XERCES::DOMElement* pNode)
   XERCES::DOMElement* pHostModuleNode = XercesXML::appendNode(pNode, "host-module");
   XERCES::DOMElement* pHostBaseNode   = XercesXML::appendNode(pHostModuleNode, "host-base");
 
-  if(!tHostBase::saveProject(pHostBaseNode))
+  if(!Host::saveProject(pHostBaseNode))
   {
     return false;
   }
 
   XERCES::DOMElement* pModuleBaseNode = XercesXML::appendNode(pHostModuleNode, "module-base");
-  if(!tModuleBase::save(pModuleBaseNode))
+  if(!Module::save(pModuleBaseNode))
   {
     return false;
   }
@@ -145,7 +160,7 @@ bool HostModule::save(XERCES::DOMElement* pNode)
 //---------------------------------------------load
 bool HostModule::load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections, tConnectionMap* pOutputConnections)
 {
-  XERCES::DOMElement* pHostModuleNode = XercesXML::findChildNode(pNode, "host-module");
+  XERCES::DOMElement* pHostModuleNode = XercesXML::findChildNode(pNode, "host-module", true);
   if(!pHostModuleNode)
   {
     return false;
@@ -157,7 +172,7 @@ bool HostModule::load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnectio
     return false;
   }
 
-  if(!tHostBase::loadProject(pHostBaseNode))
+  if(!Host::loadProject(pHostBaseNode))
   {
     return false;
   }
@@ -168,7 +183,7 @@ bool HostModule::load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnectio
     return false;
   }
 
-  if(!tModuleBase::load(pModuleBaseNode, pInputConnections, pOutputConnections))
+  if(!Module::load(pModuleBaseNode, pInputConnections, pOutputConnections))
   {
     return false;
   }
@@ -198,22 +213,11 @@ bool HostModule::load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnectio
   return true;
 }
 
-//---------------------------------------------registerModuleInputs
-void HostModule::registerModuleInputs()
-{
-      
-}
-
-//---------------------------------------------registerModuleOutputs
-void HostModule::registerModuleOutputs()
-{
-}
-
 //---------------------------------------------shapeProcess
 Module::CompileResultCode HostModule::shapeProcess(ClayShaper* pShaper, ClayExecutable& aTarget)
 {
   shapeProcess();
-  return tBase::shapeProcess(pShaper, aTarget);
+  return Module::shapeProcess(pShaper, aTarget);
 }
 
 //---------------------------------------------process
@@ -270,7 +274,7 @@ void HostModule::closeProject()
 
   m_aPendingExecutableLock.unlock();
 
-  tHostBase::closeProject();
+  Host::closeProject();
 }
 
 //---------------------------------------------save
@@ -454,6 +458,17 @@ bool HostModule::restoreInput(XERCES::DOMElement* pNode)
   }
 
   return exportModuleInput(pModule, sInputName);
+}
+
+//---------------------------------------------registerModuleInputs
+void HostModule::registerModuleInputs()
+{
+      
+}
+
+//---------------------------------------------registerModuleOutputs
+void HostModule::registerModuleOutputs()
+{
 }
 
 } }

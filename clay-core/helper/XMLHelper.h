@@ -93,6 +93,7 @@ public:
   CLAY_DLL_EXPORT static bool getAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, tString& sDst);
   CLAY_DLL_EXPORT static bool getAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, float&   fDst);
   CLAY_DLL_EXPORT static bool getAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, unsigned int& uDst);
+  CLAY_DLL_EXPORT static bool getAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, bool& bDst);
   CLAY_DLL_EXPORT static bool getBinaryAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, tBinaryBuffer& aDst);
       
   CLAY_DLL_EXPORT static XERCES::DOMElement* findChildNode(XERCES::DOMElement* pParent, const char* pChildName, bool bRecursive = false);

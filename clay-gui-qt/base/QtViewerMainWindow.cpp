@@ -175,41 +175,27 @@ namespace CLAY
       QtListDialog aDialog(this);
       aDialog.init();
       
-      ModuleRegistry::namespace_iterator it  = MODULE::StandardRegistry::instance()->beginNamespace();
-      ModuleRegistry::namespace_iterator end = MODULE::StandardRegistry::instance()->endNamespace();
-      for(; it!=end; ++it)
+      ModuleRegistry::const_iterator it  = MODULE::StandardRegistry::instance()->begin();
+      ModuleRegistry::const_iterator end = MODULE::StandardRegistry::instance()->end();
+      for(unsigned int i=0; it!=end; ++it, ++i)
       {
-        ModuleDescriptorTraits::tNamespaceID uNamespaceId      = it->first;
-        ModuleRegistry::tDescriptorCollection& collDescriptors = it->second;
-        ModuleRegistry::descr_iterator ti  = collDescriptors.begin();
-        ModuleRegistry::descr_iterator dne = collDescriptors.end();
-        for(; ti!=dne; ++ti)
-        {
-          ModuleDescriptorTraits::tModuleID uModuleId = ti->first;
-          QString sModuleId    = QString::fromAscii(reinterpret_cast<char*>(&uModuleId),    sizeof(uModuleId));
-          QString sNamespaceId = QString::fromAscii(reinterpret_cast<char*>(&uNamespaceId), sizeof(uNamespaceId));
-
-          unsigned long long aCompoundId = ModuleDescriptorTraits::encode(uModuleId, uNamespaceId);
-
-          QString sCompoundEntry = sNamespaceId + ":"+ sModuleId;
-          aDialog.addEntry(sCompoundEntry, aCompoundId);
-        }
+        QString sCompoundEntry = it->first.c_str();
+        aDialog.addEntry(sCompoundEntry, i);
       }
 
       int iResult = aDialog.exec();
       if(iResult == QDialog::Accepted)
       {
-        unsigned long long aCompound = aDialog.getSelectedUserData().toLongLong();
+        unsigned int idx = aDialog.getSelectedUserData().toUInt();
+        const char* moduleURI = MODULE::StandardRegistry::instance()->getModuleURI(idx);
+        if(moduleURI)
+        {
+          //build a generic module name
+          unsigned int uNumModules = getNumHostedModules();
+          tString sUniqueModuleId  = tString(moduleURI) + LexicalConversion::toString(uNumModules);
 
-        ModuleDescriptorTraits::tModuleID    aModuleId;
-        ModuleDescriptorTraits::tNamespaceID aNamespaceId;
-        ModuleDescriptorTraits::decode(aCompound, aModuleId, aNamespaceId);
-        
-        //build a generic module name
-        unsigned int uNumModules = getNumHostedModules();
-        tString sUniqueModuleId  = IntegerDecoding::toString(&aModuleId) + LexicalConversion::toString(uNumModules);
-
-        onAddModule(aModuleId, sUniqueModuleId, aNamespaceId);
+          onAddModule(moduleURI, sUniqueModuleId);
+        }
       }
     }
 
@@ -245,12 +231,13 @@ namespace CLAY
     }
 
     //---------------------------------------------onAddModule
-    void QtViewerMainWindow::onAddModule(ModuleDescriptorTraits::tModuleID    aModuleId,
-                                         const tString&                       sRuntimeModuleId,
-                                         ModuleDescriptorTraits::tNamespaceID aNamespaceId)
+    void QtViewerMainWindow::onAddModule(const char* moduleURI, const tString& sRuntimeModuleId)
     {
-      Module* pModule = createModule(aModuleId, aNamespaceId, sRuntimeModuleId, NULL, true);
-      addModuleUI(pModule);
+      Module* pModule = createModule(moduleURI, sRuntimeModuleId, NULL, true);
+      if(pModule)
+      {
+        addModuleUI(pModule);
+      }
     }
 
     //---------------------------------------------autoArrangeModules
@@ -476,7 +463,7 @@ namespace CLAY
     //---------------------------------------------addModuleUI
     void QtViewerMainWindow::addModuleUI(Module* pModule, unsigned int uX, unsigned int uY)
     {
-      UI::ModuleWidget* pModuleWidget = QtModuleUIRegistry::instance()->createUI(pModule, pModule->getModuleDescriptor()->getModuleId(), this, m_pWorkspace);
+      UI::ModuleWidget* pModuleWidget = QtModuleUIRegistry::instance()->createUI(pModule, pModule->getModuleURI(), this, m_pWorkspace);
 
       if(pModuleWidget)
       {

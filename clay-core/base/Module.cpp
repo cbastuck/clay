@@ -23,7 +23,6 @@
 #include <helper/LexicalConversion.h>
 #include <clay-core/base/ClayShaper.h>
 #include <clay-core/base/ClayExecutable.h>
-#include <clay-core/base/ModuleDescriptor.h>
 #include <clay-core/base/ModuleDependencies.h>
 
 //STL
@@ -31,6 +30,7 @@
 
 //boost
 #include <boost/bind.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #define XML_MODULE_ROOT_TAG               "module"
 #define XML_MODULE_IO_TAG                 "module-io"
@@ -52,8 +52,7 @@ namespace CLAY{
 
 //---------------------------------------------Module
 Module::Module(const tString& sModuleRuntimeId)
-  : m_sModuleRuntimeID(sModuleRuntimeId),
-    m_uState(0)
+  : m_sModuleRuntimeID(sModuleRuntimeId)
 {
 }
 
@@ -63,10 +62,21 @@ Module::~Module()
 
 }
 
+//---------------------------------------------
+bool Module::init(const tString& xml)
+{
+  boost::scoped_ptr<XERCES::DOMDocument> doc(XercesXML::createDOMDoc(xml.c_str(), xml.size()));
+  if(!doc)
+  {
+    return false;
+  }
+
+  return init(doc->getDocumentElement());
+}
+
 //---------------------------------------------init
 bool Module::init(XERCES::DOMNode* pNode)
 {
-  setModuleState(MODULE_INITIALIZED);
   return true;
 }
 
@@ -82,15 +92,15 @@ void Module::deInit()
   {
     unregisterOutput(*beginOutput());
   }
-
-  m_uState = MODULE_UNINITIALIZED;
 }
 
 //---------------------------------------------getModuleDescriptor
-const ModuleDescriptorBase* Module::getModuleDescriptor() const
+const char* Module::getModuleURI() const
 {
-  return NULL;
+  CLAY_FAIL();
+  return NULL; //override this method
 }
+
 
 //---------------------------------------------save
 bool Module::save(XERCES::DOMElement* pNode)
@@ -98,12 +108,12 @@ bool Module::save(XERCES::DOMElement* pNode)
   XERCES::DOMElement* pModuleRoot = XercesXML::appendNode(pNode, XML_MODULE_ROOT_TAG);
   XercesXML::addAttribute(pModuleRoot, XML_MODULE_RUNTIME_ID_ATTR, m_sModuleRuntimeID.c_str());
 
-  const ModuleDescriptorBase* pDescr = getModuleDescriptor();
-  if(pDescr)
+  const char* uri = getModuleURI();
+  if(!uri)
   {
-    XercesXML::addAttribute(pModuleRoot, "module-id",        pDescr->getModuleIdAsString().c_str());
-    XercesXML::addAttribute(pModuleRoot, "module-namespace", pDescr->getNamespaceIdAsString().c_str());
+    return false;
   }
+  XercesXML::addAttribute(pModuleRoot, XML_MODULE_ID_ATTR, uri);
 
   //save the module-inputs
   XERCES::DOMElement* pModuleIONode    = XercesXML::appendNode(pModuleRoot,   XML_MODULE_IO_TAG);
@@ -136,22 +146,283 @@ bool Module::save(XERCES::DOMElement* pNode)
 }
 
 //---------------------------------------------load
+bool Module::load(XERCES::DOMElement* pNode)
+{
+  return loadImpl(pNode, NULL,NULL);
+}
+
+//---------------------------------------------
 bool Module::load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections, tConnectionMap* pOutputConnections)
+{
+  return loadImpl(pNode, pInputConnections, pOutputConnections);
+}
+
+//---------------------------------------------getInput
+ModuleInputBase* Module::getInput(size_t i) const
+{
+  CLAY_ASSERT(i < getNumInputs());
+  return m_collInputs[i];
+}
+
+//---------------------------------------------getInput
+ModuleInputBase*  Module::getInput(const tString& sInputName) const
+{
+  tInputCollection::const_iterator it  = m_collInputs.begin();
+  tInputCollection::const_iterator end = m_collInputs.end();
+  for(; it!=end; ++it)
+  {
+    ModuleInputBase* pInput = *it;
+    if(pInput->getName() == sInputName)
+    { 
+      return pInput;
+    }
+  }
+  return NULL;
+}
+
+//---------------------------------------------getOutput
+ModuleOutputBase* Module::getOutput(size_t i) const
+{
+  CLAY_ASSERT(i < getNumOutputs());
+  return m_collOutputs[i];
+}
+
+//---------------------------------------------getOutput
+ModuleOutputBase* Module::getOutput(const tString& sOutputName) const
+{
+  tOutputCollection::const_iterator it  = m_collOutputs.begin();
+  tOutputCollection::const_iterator end = m_collOutputs.end();
+  for(; it!=end; ++it)
+  {
+    ModuleOutputBase* pOutput = *it;
+    if(pOutput->getName() == sOutputName)
+    { 
+      return pOutput;
+    }
+  }
+  return NULL;
+}
+
+//---------------------------------------------duplicateModuleOutput
+ModuleOutputBase* Module::duplicateModuleOutput(ModuleOutputBase* pOriginal)
+{
+  CLAY_ASSERT(pOriginal->getParentModule() == this);
+
+  ModuleOutputBase* pProxy = pOriginal->createProxy();
+  if(registerOutput(pProxy, pOriginal->getName() + LexicalConversion::toString(getNumOutputs())))
+  {
+    return pProxy;
+  }
+
+  delete pProxy;
+  return NULL;
+}
+
+//---------------------------------------------canConnectFrom
+bool Module::canConnectFrom(Module* pPredecessor)
+{
+  return connectFrom(pPredecessor, TEST_CLEVER_CONNECT_MODE) == Connect_OK; //test if connection is possible
+}
+
+//---------------------------------------------
+Module::ConnectResultCode Module::connectFrom(Module* pPredecessor)
+{
+  return connectFrom(pPredecessor, CLEVER_CONNECT_MODE);
+}
+
+//---------------------------------------------connectFrom
+Module::ConnectResultCode Module::connectFrom(Module* pPredecessor, ConnectionStrategy eConnectionStrategy)
+{
+  CLAY_ASSERT(pPredecessor);
+  if(!pPredecessor)
+  {
+    return Module::Connect_ERROR;
+  }
+
+  bool bConnectionAvailable = false;
+  if(eConnectionStrategy == CLEVER_CONNECT_MODE || 
+      eConnectionStrategy == TEST_CLEVER_CONNECT_MODE)
+  {
+    tInputCollection::iterator inIt  = m_collInputs.begin();
+    tInputCollection::iterator inEnd = m_collInputs.end();
+    for(; inIt!=inEnd; ++inIt)
+    {
+      ModuleInputBase* pCurrentInput = *inIt;
+      for(unsigned int i=0, n=pPredecessor->getNumOutputs(); (i<n) && (!pCurrentInput->isConnected()); ++i)
+      {
+        ModuleOutputBase* pCurrentOutput = pPredecessor->getOutput(i);
+        if(!pCurrentOutput->isConnected()) //try to connect if not already connected
+        {
+          if(pCurrentOutput->canConnect(pCurrentInput) && pCurrentInput->canConnect(pCurrentOutput))
+          {
+            if(eConnectionStrategy == CLEVER_CONNECT_MODE)
+            {
+              //establish a bidirectional connection - compatibility already checked
+              if(pCurrentOutput->connect(pCurrentInput,  false) && pCurrentInput->connect(pCurrentOutput, false))
+              {
+                signalModuleOutputConnected.emit1(pCurrentOutput);
+                signalModuleInputConnected.emit1(pCurrentInput);
+              }
+            }
+            bConnectionAvailable = true;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    CLAY_FAIL(); //strategy not implemented
+  }
+
+  if(bConnectionAvailable)
+  {
+    return Module::Connect_OK;
+  }
+  return Module::NoSuitableConnection_ERROR;
+}
+
+//---------------------------------------------connectFrom
+Module::ConnectResultCode Module::connectFrom(const tString& sInputname, Module* pPredecessor, const tString& sOutputname)
+{
+  CLAY_ASSERT(pPredecessor);
+  if(!pPredecessor)
+  {
+    return Module::Connect_ERROR;
+  }
+
+  ModuleOutputBase* pOutput = pPredecessor->getOutput(sOutputname);
+  ModuleInputBase*  pInput  = getInput(sInputname);
+  if(pOutput && pInput)
+  {
+    if(pOutput->connect(pInput,  false) &&
+        pInput->connect(pOutput, false))
+    {
+      signalModuleOutputConnected.emit1(pOutput);
+      signalModuleInputConnected.emit1(pInput);
+      
+      return Module::Connect_OK;
+    }
+  }
+
+  CLAY_FAIL();
+  return Module::Connect_ERROR;
+}
+
+//---------------------------------------------disconnect
+void Module::disconnect()
+{  
+  tOutputCollection::iterator it  = m_collOutputs.begin();
+  tOutputCollection::iterator end = m_collOutputs.end();
+  for(; it!=end; ++it)
+  {
+    ModuleOutputBase* pOutput = *it;
+    disconnect(pOutput);
+  }
+  
+  tInputCollection::iterator ti  = m_collInputs.begin();
+  tInputCollection::iterator dne = m_collInputs.end();
+  for(; ti!=dne; ++ti)
+  {
+    ModuleInputBase* pInput = *ti;
+    disconnect(pInput);
+  }
+}
+
+//---------------------------------------------disconnect
+void Module::disconnect(ModuleOutputBase* pOutput)
+{
+  for(unsigned int i=0, n=pOutput->getNumConnections(); i<n; ++i)
+  {
+    ModuleInputBase* pOpponentInput = pOutput->getOpponent(i);
+    Module* pOpponentModule = pOpponentInput->getParentModule();
+    CLAY_ASSERT(pOpponentInput);
+    CLAY_ASSERT(pOpponentModule);
+    pOpponentInput->disconnect();
+    pOpponentModule->onInputDisconnected(pOpponentInput);
+  }    
+
+  pOutput->disconnect();
+  onOutputDisconnected(pOutput);
+}
+
+//---------------------------------------------disconnect
+void Module::disconnect(ModuleInputBase* pInput)
+{
+  if(pInput->isConnected())
+  {
+    ModuleOutputBase* pOpponentOutput = pInput->getOpponent();
+    Module* pOpponentModule = pInput->getSourceModule();
+    CLAY_ASSERT(pOpponentModule);
+    CLAY_ASSERT(pOpponentOutput);
+    pOpponentOutput->disconnect(pInput);
+    pOpponentModule->onOutputDisconnected(pOpponentOutput);
+
+    pInput->disconnect();
+    onInputDisconnected(pInput);
+  }
+}
+
+//---------------------------------------------getInputConnectionsFrom
+void Module::getInputConnectionsFrom(Module* pOther, Module::tInputCollection& collDst)
+{
+  tInputCollection::iterator it  = m_collInputs.begin();
+  tInputCollection::iterator end = m_collInputs.end();
+  for(; it!=end; ++it)
+  {
+    ModuleInputBase* pCurrent = *it;
+    if(pCurrent->isConnected())
+    {
+      if(pCurrent->getOpponent()->getParentModule() == pOther)
+      {
+        collDst.push_back(pCurrent);
+      }
+    }
+  }
+}
+
+//---------------------------------------------getOutputConnectionsTo
+void Module::getOutputConnectionsTo(Module* pOther, Module::tOutputCollection& collDst)
+{
+  tOutputCollection::iterator it  = m_collOutputs.begin();
+  tOutputCollection::iterator end = m_collOutputs.end();
+  for(; it!=end; ++it)
+  {
+    ModuleOutputBase* pCurrent = *it;
+    for(unsigned int i=0, n=pCurrent->getNumConnections(); i<n; ++i)
+    {
+      if(pCurrent->getOpponent(i)->getParentModule() == pOther)
+      {
+        collDst.push_back(pCurrent);
+      }
+    }
+  }
+}
+
+//---------------------------------------------shapeProcess
+Module::CompileResultCode Module::shapeProcess(ClayShaper* pCompiler, ClayExecutable& aTarget)
+{
+  aTarget.appendMethod(boost::bind(&Module::process, this), this);
+  return Module::Compile_OK;
+}
+
+//---------------------------------------------process
+Module::ProcessResultCode Module::process()
+{
+  return Module::ProcessNotImplemented_ERROR;
+}
+
+
+//---------------------------------------------
+bool Module::loadImpl(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections, tConnectionMap* pOutputConnections)
 {
   if(!XercesXML::nodeHasName(pNode, XML_MODULE_ROOT_TAG))
   {
     pNode = XercesXML::findChildNode(pNode, XML_MODULE_ROOT_TAG, true);
   }
   
-  if(pNode && 
-    XercesXML::getAttributeValue(pNode, XML_MODULE_RUNTIME_ID_ATTR, m_sModuleRuntimeID))
+  if(pNode && XercesXML::getAttributeValue(pNode, XML_MODULE_RUNTIME_ID_ATTR, m_sModuleRuntimeID))
   {
-    tString sModuleIdAsString;
-    XercesXML::getAttributeValue(pNode, XML_MODULE_ID_ATTR, sModuleIdAsString);
-
-    tString sModuleNamespaceAsString;
-    XercesXML::getAttributeValue(pNode, XML_MODULE_NAMESPACE_ATTR, sModuleIdAsString);
-
     //load the module inputs
     XERCES::DOMElement* pModuleInputsNode  = XercesXML::findChildNode(pNode, XML_MODULE_MODULE_INPUTS_TAG, true);
     if(!pModuleInputsNode)
@@ -171,7 +442,6 @@ bool Module::load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections, 
     return true;
   }
 
-  resetModuleState(); //this module no state - i.e. is invalid
   return false; //a module runtime-id MUST always be available
 }
 
@@ -289,219 +559,6 @@ bool Module::loadModuleOutput(XERCES::DOMElement* pNode, tConnectionMap* pOutput
   return false;
 }
 
-//---------------------------------------------getInput
-ModuleInputBase* Module::getInput(tSize i) const
-{
-  CLAY_ASSERT(i < getNumInputs());
-  return m_collInputs[i];
-}
-
-//---------------------------------------------getInput
-ModuleInputBase*  Module::getInput(const tString& sInputName) const
-{
-  tInputCollection::const_iterator it  = m_collInputs.begin();
-  tInputCollection::const_iterator end = m_collInputs.end();
-  for(; it!=end; ++it)
-  {
-    ModuleInputBase* pInput = *it;
-    if(pInput->getName() == sInputName)
-    { 
-      return pInput;
-    }
-  }
-  return NULL;
-}
-
-//---------------------------------------------getOutput
-ModuleOutputBase* Module::getOutput(tSize i) const
-{
-  CLAY_ASSERT(i < getNumOutputs());
-  return m_collOutputs[i];
-}
-
-//---------------------------------------------getOutput
-ModuleOutputBase* Module::getOutput(const tString& sOutputName) const
-{
-  tOutputCollection::const_iterator it  = m_collOutputs.begin();
-  tOutputCollection::const_iterator end = m_collOutputs.end();
-  for(; it!=end; ++it)
-  {
-    ModuleOutputBase* pOutput = *it;
-    if(pOutput->getName() == sOutputName)
-    { 
-      return pOutput;
-    }
-  }
-  return NULL;
-}
-
-//---------------------------------------------duplicateModuleOutput
-ModuleOutputBase* Module::duplicateModuleOutput(ModuleOutputBase* pOriginal)
-{
-  CLAY_ASSERT(pOriginal->getParentModule() == this);
-
-  ModuleOutputBase* pProxy = pOriginal->createProxy();
-  if(registerOutput(pProxy, pOriginal->getName() + LexicalConversion::toString(getNumOutputs())))
-  {
-    return pProxy;
-  }
-
-  delete pProxy;
-  return NULL;
-}
-
-//---------------------------------------------connectFrom
-Module::ConnectResultCode Module::connectFrom(Module* pPredecessor, ConnectionStrategy eConnectionStrategy)
-{
-  CLAY_ASSERT(pPredecessor);
-  if(!pPredecessor)
-  {
-    return Module::Connect_ERROR;
-  }
-
-  bool bConnectionAvailable = false;
-  if(eConnectionStrategy == CLEVER_CONNECT_MODE || 
-      eConnectionStrategy == TEST_CLEVER_CONNECT_MODE)
-  {
-    tInputCollection::iterator inIt  = m_collInputs.begin();
-    tInputCollection::iterator inEnd = m_collInputs.end();
-    for(; inIt!=inEnd; ++inIt)
-    {
-      ModuleInputBase* pCurrentInput = *inIt;
-      for(unsigned int i=0, n=pPredecessor->getNumOutputs(); (i<n) && (!pCurrentInput->isConnected()); ++i)
-      {
-        ModuleOutputBase* pCurrentOutput = pPredecessor->getOutput(i);
-        if(!pCurrentOutput->isConnected()) //try to connect if not already connected
-        {
-          if(pCurrentOutput->canConnect(pCurrentInput) && pCurrentInput->canConnect(pCurrentOutput))
-          {
-            if(eConnectionStrategy == CLEVER_CONNECT_MODE)
-            {
-              //establish a bidirectional connection - compatibility already checked
-              if(pCurrentOutput->connect(pCurrentInput,  false) &&
-                  pCurrentInput->connect(pCurrentOutput, false))
-              {
-                signalModuleOutputConnected.emit1(pCurrentOutput);
-                signalModuleInputConnected.emit1(pCurrentInput);
-              }
-            }
-            bConnectionAvailable = true;
-          }
-        }
-      }
-    }
-  }
-  else
-  {
-    CLAY_FAIL(); //strategy not implemented
-  }
-
-  if(bConnectionAvailable)
-  {
-    return Module::Connect_OK;
-  }
-  return Module::NoSuitableConnection_ERROR;
-}
-
-//---------------------------------------------connectFrom
-Module::ConnectResultCode Module::connectFrom(const tString& sInputname, Module* pPredecessor, const tString& sOutputname)
-{
-  CLAY_ASSERT(pPredecessor);
-  if(!pPredecessor)
-  {
-    return Module::Connect_ERROR;
-  }
-
-  ModuleOutputBase* pOutput = pPredecessor->getOutput(sOutputname);
-  ModuleInputBase*  pInput  = getInput(sInputname);
-  if(pOutput && pInput)
-  {
-    if(pOutput->connect(pInput,  false) &&
-        pInput->connect(pOutput, false))
-    {
-      signalModuleOutputConnected.emit1(pOutput);
-      signalModuleInputConnected.emit1(pInput);
-      
-      return Module::Connect_OK;
-    }
-  }
-
-  CLAY_FAIL();
-  return Module::Connect_ERROR;
-}
-
-//---------------------------------------------shapeProcess
-Module::CompileResultCode Module::shapeProcess(ClayShaper* pCompiler, ClayExecutable& aTarget)
-{
-  aTarget.appendMethod(boost::bind(&Module::process, this), this);
-  return Module::Compile_OK;
-}
-
-//---------------------------------------------process
-Module::ProcessResultCode Module::process()
-{
-  return Module::ProcessNotImplemented_ERROR;
-}
-
-//---------------------------------------------canConnectFrom
-bool Module::canConnectFrom(Module* pPredecessor)
-{
-  return connectFrom(pPredecessor, TEST_CLEVER_CONNECT_MODE) == Connect_OK; //test if connection is possible
-}
-
-//---------------------------------------------disconnect
-void Module::disconnect()
-{  
-  tOutputCollection::iterator it  = m_collOutputs.begin();
-  tOutputCollection::iterator end = m_collOutputs.end();
-  for(; it!=end; ++it)
-  {
-    ModuleOutputBase* pOutput = *it;
-    disconnect(pOutput);
-  }
-  
-  tInputCollection::iterator ti  = m_collInputs.begin();
-  tInputCollection::iterator dne = m_collInputs.end();
-  for(; ti!=dne; ++ti)
-  {
-    ModuleInputBase* pInput = *ti;
-    disconnect(pInput);
-  }
-}
-
-//---------------------------------------------disconnect
-void Module::disconnect(ModuleOutputBase* pOutput)
-{
-  for(unsigned int i=0, n=pOutput->getNumConnections(); i<n; ++i)
-  {
-    ModuleInputBase* pOpponentInput = pOutput->getOpponent(i);
-    Module* pOpponentModule = pOpponentInput->getParentModule();
-    CLAY_ASSERT(pOpponentInput);
-    CLAY_ASSERT(pOpponentModule);
-    pOpponentInput->disconnect();
-    pOpponentModule->onInputDisconnected(pOpponentInput);
-  }    
-
-  pOutput->disconnect();
-  onOutputDisconnected(pOutput);
-}
-
-//---------------------------------------------disconnect
-void Module::disconnect(ModuleInputBase* pInput)
-{
-  if(pInput->isConnected())
-  {
-    ModuleOutputBase* pOpponentOutput = pInput->getOpponent();
-    Module* pOpponentModule = pInput->getSourceModule();
-    CLAY_ASSERT(pOpponentModule);
-    CLAY_ASSERT(pOpponentOutput);
-    pOpponentOutput->disconnect(pInput);
-    pOpponentModule->onOutputDisconnected(pOpponentOutput);
-
-    pInput->disconnect();
-    onInputDisconnected(pInput);
-  }
-}
 
 //---------------------------------------------onInputDisconnected
 void Module::onInputDisconnected(ModuleInputBase* pInput)
@@ -617,116 +674,5 @@ bool Module::unregisterOutputs(bool bDelete)
   return bAccumulatedSuccess;
 }
 
-//---------------------------------------------getInputConnectionsFrom
-void Module::getInputConnectionsFrom(Module* pOther, Module::tInputCollection& collDst)
-{
-  tInputCollection::iterator it  = m_collInputs.begin();
-  tInputCollection::iterator end = m_collInputs.end();
-  for(; it!=end; ++it)
-  {
-    ModuleInputBase* pCurrent = *it;
-    if(pCurrent->isConnected())
-    {
-      if(pCurrent->getOpponent()->getParentModule() == pOther)
-      {
-        collDst.push_back(pCurrent);
-      }
-    }
-  }
-}
-
-//---------------------------------------------getOutputConnectionsTo
-void Module::getOutputConnectionsTo(Module* pOther, Module::tOutputCollection& collDst)
-{
-  tOutputCollection::iterator it  = m_collOutputs.begin();
-  tOutputCollection::iterator end = m_collOutputs.end();
-  for(; it!=end; ++it)
-  {
-    ModuleOutputBase* pCurrent = *it;
-    for(unsigned int i=0, n=pCurrent->getNumConnections(); i<n; ++i)
-    {
-      if(pCurrent->getOpponent(i)->getParentModule() == pOther)
-      {
-        collDst.push_back(pCurrent);
-      }
-    }
-  }
-}
-
-//---------------------------------------------setModuleState
-void Module::setModuleState(ModuleState eModuleState)
-{
-  bool bAlreadySet = false;
-  if(m_uState & eModuleState)
-  {
-    bAlreadySet = true;
-  }
-  if(!bAlreadySet)
-  {
-    m_uState |= eModuleState;
-    if(eModuleState == MODULE_INITIALIZED)
-    {
-      signalModuleInitialized.emit0();
-    }
-    else if(eModuleState == MODULE_ACTIVE)
-    {
-      signalModuleActive.emit0();
-    }
-    else 
-    {
-      CLAY_FAIL();
-      return;
-    }
-  }
-}
-
-//---------------------------------------------setModuleState
-void Module::setModuleState(NegativeModuleState eModuleState)
-{
-  bool bAlreadyUnset = !(m_uState & eModuleState);
-  if(!bAlreadyUnset)
-  {
-    m_uState &= ~eModuleState;
-    if(eModuleState == MODULE_UNINITIALIZED)
-    {
-      signalModuleUnitialized.emit0();
-    }
-    else if(eModuleState == MODULE_INACTIVE)
-    {
-      signalModuleInactive.emit0();
-    }
-    else 
-    {
-      CLAY_FAIL();
-      return;
-    }
-  }
-}
-
-//---------------------------------------------resetModuleState
-void Module::resetModuleState()
-{
-  m_uState = 0;
-}
-
-//---------------------------------------------isInitialized
-bool Module::isInitialized() const
-{ 
-  if(m_uState & MODULE_INITIALIZED)
-  {
-    return true;
-  }
-  return false;
-}
-
-//---------------------------------------------isActive
-bool Module::isActive() const
-{ 
-  if(m_uState & MODULE_ACTIVE)
-  {
-    return true;
-  }
-  return false;
-}
 
 }

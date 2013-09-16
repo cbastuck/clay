@@ -54,9 +54,7 @@ namespace CLAY
 
       virtual void closeProject();
 
-      void onAddModule(ModuleDescriptorTraits::tModuleID    aModuleId, 
-                       const tString&                       sRuntimeModuleId,
-                       ModuleDescriptorTraits::tNamespaceID aNamespaceId = ModuleDescriptorTraits::defaultNamespace);
+      void onAddModule(const char* moduleURI, const tString& sRuntimeModuleId);
 
       void autoArrangeModules();
 

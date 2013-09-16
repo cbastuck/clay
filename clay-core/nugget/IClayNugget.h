@@ -21,6 +21,8 @@
 #ifndef ICLAYNUGGET_H_
 #define ICLAYNUGGET_H_
 
+#include <boost/function.hpp>
+
 //currently using boost::mpl::list to store the modules in the bundle
 #include <boost/mpl/list.hpp>
 #include <boost/mpl/begin.hpp>
@@ -73,15 +75,19 @@ class ModuleUIDescriptor;
 
 namespace CLAY{ namespace NUGGET{
 
+typedef boost::function<Module*(const tString&)> tModuleFactory;
+
 //---------------------------------------------IClayNugget
 class IClayNugget
 {
 public:
+  virtual ~IClayNugget(){}
   virtual void                          init()                                   = 0;
   virtual void                          deInit()                                 = 0;
   virtual unsigned int                  getNumModules()                          = 0;
   virtual unsigned int                  getNumModuleUIs()                        = 0;
-  virtual const ModuleDescriptorBase*   getModuleDescriptor(unsigned int uIdx)   = 0;
+  virtual const char*                   getModuleURI(unsigned int uIdx)          = 0;
+  virtual tModuleFactory                getModuleFactory(unsigned int uIdx)      = 0;
   virtual const UI::ModuleUIDescriptor* getModuleUIDescriptor(unsigned int uIdx) = 0;
 };
 

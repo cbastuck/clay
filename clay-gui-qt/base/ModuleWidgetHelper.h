@@ -25,14 +25,13 @@
 namespace CLAY{ namespace UI{
    
 template<ModuleUIDescriptorTraits::tFactoryMethod aFactory,    
-          ModuleUIDescriptorTraits::tDestroyMethod aDestroy,
-          ModuleDescriptorTraits::tModuleID        aModuleID,
-          ModuleDescriptorTraits::tNamespaceID     aNamespaceID>
+         ModuleUIDescriptorTraits::tDestroyMethod aDestroy,
+         typename MODULE>
 class ModuleUIDescriptorHelper : public ModuleUIDescriptor
 {
 public:
   ModuleUIDescriptorHelper() 
-    : ModuleUIDescriptor(aFactory, aDestroy, aModuleID, aNamespaceID)
+    : ModuleUIDescriptor(aFactory, aDestroy, MODULE::staticModuleURI())
   {
 
   }
@@ -141,12 +140,8 @@ inline void ModuleWidgetHelper<MODULE, UI, T>::deInit()
 template<class MODULE, class UI, class T>
 inline ModuleUIDescriptor* ModuleWidgetHelper<MODULE, UI, T>::getUIDescriptor()
 {
-  const unsigned int uModuleID    = MODULE::tDescriptor::eModuleId;
-  const unsigned int uNamespaceID = MODULE::tDescriptor::eNamespaceId;
-  static ModuleUIDescriptorHelper<tThis::create,
-                                  tThis::destroy,
-                                  uModuleID,
-                                  uNamespaceID> aModuleDescriptor; //create an instance of the UI descriptor (template parameter)
+  //create an instance of the UI descriptor (template parameter)
+  static ModuleUIDescriptorHelper<tThis::create, tThis::destroy, MODULE> aModuleDescriptor; 
   return &aModuleDescriptor;
 }
 

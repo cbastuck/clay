@@ -12,6 +12,10 @@ PROJECT(${CLAY_TARGET})
 
 MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
+#dependencies
+INCLUDE(${CLAY_EXTERNALS_DIR}/boost/config.cmake)
+INCLUDE(${CLAY_EXTERNALS_DIR}/xercesc/config.cmake)
+
 SET(CLAY_SRC_FOLDER_BASE   base/ClayDefines.h
 						   base/ClayExecutable.cpp base/ClayExecutable.h
                            base/ClayRuntime.cpp base/ClayRuntime.h
@@ -28,7 +32,6 @@ SET(CLAY_SRC_FOLDER_BASE   base/ClayDefines.h
 						   base/TypedModuleInput.h
 						   base/ModuleOutputProxy.h
 						   base/ModuleInputProxy.h
-                           base/ModuleDescriptor.h
                            base/ModuleUIDescriptor.h
 						   base/ClayAllocator.h base/ClayAllocator.cpp)
 

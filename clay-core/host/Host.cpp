@@ -30,8 +30,7 @@
 #define XML_HOST_ROOT_NODE         "host-root"
 #define XML_HOST_MODULES_NODE      "hosted-modules"
 #define XML_HOST_MODULE_NODE       "hosted-module"
-#define XML_HOST_MODULE_ATTR_ID    "hosted-module-id"
-#define XML_HOST_MODULE_ATTR_NS    "hosted-module-ns"
+#define XML_HOST_MODULE_ATTR_URI   "hosted-module-id"
 #define XML_HOST_MODULE_ATTR_RT_ID "hosted-module-rt-id"
 #define XML_HOST_PRIORITY_LIST     "priority-list"
 #define XML_HOSTED_NUGGETS_NODE    "hosted-nuggets"
@@ -189,11 +188,8 @@ bool Host::saveProject(XERCES::DOMElement* pNode)
 //---------------------------------------------saveModule
 bool Host::saveModule(XERCES::DOMElement* pParent, Module* pCurrentModule)
 {
-  const ModuleDescriptorBase* pDescr = pCurrentModule->getModuleDescriptor();
-
   XERCES::DOMElement* pModuleNode = XercesXML::appendNode(pParent, XML_HOST_MODULE_NODE);
-  XercesXML::addAttribute(pModuleNode, XML_HOST_MODULE_ATTR_ID,    pDescr->getModuleIdAsString());
-  XercesXML::addAttribute(pModuleNode, XML_HOST_MODULE_ATTR_NS,    pDescr->getNamespaceIdAsString());
+  XercesXML::addAttribute(pModuleNode, XML_HOST_MODULE_ATTR_URI,   pCurrentModule->getModuleURI());
   XercesXML::addAttribute(pModuleNode, XML_HOST_MODULE_ATTR_RT_ID, pCurrentModule->getRuntimeModuleID());
 
   if(!pCurrentModule->save(pModuleNode)) //now save the actual module
@@ -276,14 +272,8 @@ Module* Host::loadModule(XERCES::DOMElement* pNode, Module::tConnectionMap* pInp
 
   if(XercesXML::nodeHasName(pNode, XML_HOST_MODULE_NODE))
   {
-    tString sModuleId;
-    if(!XercesXML::getAttributeValue(pNode, XML_HOST_MODULE_ATTR_ID, sModuleId))
-    {
-      return false;
-    }
-
-    tString sModuleNamespace;
-    if(!XercesXML::getAttributeValue(pNode, XML_HOST_MODULE_ATTR_NS, sModuleNamespace))
+    tString sModuleURI;
+    if(!XercesXML::getAttributeValue(pNode, XML_HOST_MODULE_ATTR_URI, sModuleURI))
     {
       return false;
     }
@@ -294,8 +284,7 @@ Module* Host::loadModule(XERCES::DOMElement* pNode, Module::tConnectionMap* pInp
       return false;
     }
       
-    Module* pModule = createModule(IntegerEncoding<>::encode(sModuleId), 
-                                   IntegerEncoding<>::encode(sModuleNamespace), 
+    Module* pModule = createModule(sModuleURI.c_str(), 
                                    sRuntimeModuleId, 
                                    pNode->getFirstChild(), 
                                    true);
@@ -327,18 +316,27 @@ void Host::closeProject()
 }
 
 //---------------------------------------------createModule
-Module* Host::createModule(ModuleDescriptorTraits::tModuleID    aModuleId, 
-                           ModuleDescriptorTraits::tNamespaceID aNamespaceId,
-                           const tString&                       sRuntimeModuleId, 
-                           XERCES::DOMNode*                     pConfigNode,
-                           bool                                 bAddToManagedModules)
+Module* Host::createModule(const char* sModuleURI,
+                           const tString& sRuntimeModuleId, 
+                           XERCES::DOMNode* pConfigNode,
+                           bool bAddToManagedModules)
 {
-  Module* pModule = m_pRegistry->createItem(aModuleId, aNamespaceId, sRuntimeModuleId);
-  pModule->init(pConfigNode);
+  Module* pModule = m_pRegistry->createItem(sModuleURI, sRuntimeModuleId);
+  if(!pModule)
+  {
+    return NULL;
+  }
+
+  if(pConfigNode)
+  {
+    pModule->init(pConfigNode); //TODO: invoke load instead of init (RAII)
+  }
+
   if(bAddToManagedModules)
   {
     addModule(pModule);
   }
+
   return pModule;
 }
 

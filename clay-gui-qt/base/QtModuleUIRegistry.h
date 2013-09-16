@@ -46,14 +46,12 @@ class QtModuleUIRegistry : public ModuleUIRegistry
 public:
   static QtModuleUIRegistry* instance();
 
-  ModuleWidget* createUI(Module* pModule, ModuleDescriptorTraits::tModuleID aId, Host* pHost, QWidget* pParent);
+  ModuleWidget* createUI(Module* pModule, const char* moduleURI, Host* pHost, QWidget* pParent);
 
   void destroyUI(ModuleWidget* pWidget);
 
 protected:
-  ModuleWidget* createRegisteredModuleUI(ModuleDescriptorTraits::tModuleID    aModuleID,
-                                          ModuleDescriptorTraits::tNamespaceID aModuleNS,
-                                          Module* pModule, Host* pHost, QWidget* pParent);
+  ModuleWidget* createRegisteredModuleUI(const char* moduleURI, Module* pModule, Host* pHost, QWidget* pParent);
 
 private:
       

@@ -97,7 +97,10 @@ void SampleBuffer::setLayout(BufferLayout eLayout)
           eLayout == eStereoLayout) //from mono to stereo
   {
     tBase::resize(2, getNumColumns());
-    tBase::row(1).set(tBase::row(0)); //copy left to right channel
+
+    tChannel aLeft  = tBase::row(0);
+    tChannel aRight = tBase::row(1);
+    aRight = aLeft; //copy left to right channel
   }
   m_eBufferLayout = eLayout;
 }
@@ -175,7 +178,7 @@ SampleBuffer SampleBuffer::createClip(unsigned int uStartSample, unsigned int uN
 
   SampleBuffer aRes(m_eBufferLayout);
   tBase& aSubmat = aRes;
-  aSubmat = tBase::submatrix(0, uNumChannels, uStartSample, uNumSamples);
+  aSubmat.attach(tBase::submatrix(0, uNumChannels, uStartSample, uNumSamples));
 
   aRes.m_uSampleRate = m_uSampleRate;
   aRes.m_eBufferLayout = (uNumChannels == 1) ? eMonoLayout : eStereoLayout;

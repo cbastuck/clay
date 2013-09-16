@@ -109,35 +109,6 @@ void HostModuleUIInternalView::init()
 
   CLAY_ASSERT(!m_pRunModuleAction);
   m_pRunModuleAction = new QAction("Process Module", this);
-/*
-  //create the UIs for the input and output interface modules
-  unsigned int uSpacingX = 5;
-  unsigned int uTop    = 0;
-  unsigned int uBottom = height();
-  unsigned int uModuleHeight = 0;
-  MODULE::HostModule::tIterfaceInterator it  = m_pHostModule->beginInputInterface();
-  MODULE::HostModule::tIterfaceInterator end = m_pHostModule->endInputInterface();
-  for(unsigned int iX=0; it!=end; ++it)
-  {
-    Module* pModule = *it;
-    UI::ModuleWidget* pUi = addModuleUI(pModule, iX, uTop);
-    iX += pUi->width() + uSpacingX;
-    if(uModuleHeight == 0)
-    {
-      uModuleHeight = pUi->height();
-    }
-  }
-
-  uBottom -= uModuleHeight;
-  it  = m_pHostModule->beginOutputInterface();
-  end = m_pHostModule->endOutputInterface();
-  for(unsigned int iX=0; it!=end; ++it)
-  {
-    Module* pModule = *it;
-    UI::ModuleWidget* pUi = addModuleUI(pModule, iX, uBottom);
-    iX += pUi->width() + uSpacingX;
-  } 
-*/
 }
 
 //---------------------------------------------deInit
@@ -229,47 +200,37 @@ void HostModuleUIInternalView::onAddModule()
   aDialog.init();
 
   ModuleRegistry* pRegistry = m_pHostModule->getRegistry();
-  ModuleRegistry::namespace_iterator it  = pRegistry->beginNamespace();
-  ModuleRegistry::namespace_iterator end = pRegistry->endNamespace();
-  for(; it!=end; ++it)
+  ModuleRegistry::const_iterator it = pRegistry->begin();
+  ModuleRegistry::const_iterator end = pRegistry->end();
+  for(unsigned int i=0; it!=end; ++it, ++i)
   {
-    ModuleDescriptorTraits::tNamespaceID uNamespaceId      = it->first;
-    ModuleRegistry::tDescriptorCollection& collDescriptors = it->second;
-    ModuleRegistry::descr_iterator ti  = collDescriptors.begin();
-    ModuleRegistry::descr_iterator dne = collDescriptors.end();
-    for(; ti!=dne; ++ti)
-    {
-      ModuleDescriptorTraits::tModuleID uModuleId = ti->first;
-      QString sModuleId    = QString::fromAscii(reinterpret_cast<char*>(&uModuleId),    sizeof(uModuleId));
-      QString sNamespaceId = QString::fromAscii(reinterpret_cast<char*>(&uNamespaceId), sizeof(uNamespaceId));
-
-      unsigned long long aCompoundId = ModuleDescriptorTraits::encode(uModuleId, uNamespaceId);
-
-      QString sCompoundEntry = sNamespaceId + ":"+ sModuleId;
-      aDialog.addEntry(sCompoundEntry, aCompoundId);
-    }
+      QString sCompoundEntry = it->first.c_str();
+      aDialog.addEntry(sCompoundEntry, i);
   }
 
   int iResult = aDialog.exec();
   if(iResult == QDialog::Accepted)
   {
-    unsigned long long aCompound = aDialog.getSelectedUserData().toLongLong();
+    unsigned int idx = aDialog.getSelectedUserData().toUInt();
 
-    ModuleDescriptorTraits::tModuleID    aModuleId;
-    ModuleDescriptorTraits::tNamespaceID aNamespaceId;
-    ModuleDescriptorTraits::decode(aCompound, aModuleId, aNamespaceId);
-
-    //build a generic module name
-    unsigned int uNumModules = m_pHostModule->getNumHostedModules();
-    tString sUniqueModuleId  = IntegerDecoding::toString(&aModuleId) + LexicalConversion::toString(uNumModules);
-
-    onAddModule(aModuleId, sUniqueModuleId, aNamespaceId);
-
-    m_pHostModule->shapeProcess();
-
-    if(m_pWorkspace)
+    const char* moduleURI = pRegistry->getModuleURI(idx);
+    if(moduleURI)
     {
-      m_pWorkspace->autoResize();
+      //build a generic module name
+      unsigned int uNumModules = m_pHostModule->getNumHostedModules();
+
+      tString sUniqueModuleId = moduleURI;
+      size_t offset = sUniqueModuleId.find_last_of('/');
+      sUniqueModuleId = (offset != tString::npos) ? sUniqueModuleId.substr(offset+1) + LexicalConversion::toString(uNumModules) : LexicalConversion::toString(uNumModules);
+
+      onAddModule(moduleURI, sUniqueModuleId);
+
+      m_pHostModule->shapeProcess();
+
+      if(m_pWorkspace)
+      {
+        m_pWorkspace->autoResize();
+      }
     }
   }
 }
@@ -410,13 +371,11 @@ void HostModuleUIInternalView::dropEvent(QDropEvent* pEvent)
 }
 
 //---------------------------------------------onAddModule
-Module* HostModuleUIInternalView::onAddModule(ModuleDescriptorTraits::tModuleID    aModuleId,
-                                              const tString&                       sRuntimeModuleId,
-                                              ModuleDescriptorTraits::tNamespaceID aNamespaceId,
-                                              XERCES::DOMNode*                     pConfigNode)
+Module* HostModuleUIInternalView::onAddModule(const char* moduleURI,
+                                              const tString& sRuntimeModuleId,
+                                              XERCES::DOMNode* pConfigNode)
 {
-  Module* pModule = m_pHostModule->createModule(aModuleId, 
-                                                aNamespaceId, 
+  Module* pModule = m_pHostModule->createModule(moduleURI,
                                                 sRuntimeModuleId, 
                                                 pConfigNode, 
                                                 true);
@@ -466,7 +425,7 @@ void HostModuleUIInternalView::onLoadProject(const QString& sFilename)
 UI::ModuleWidget* HostModuleUIInternalView::addModuleUI(Module* pModule, unsigned int uX, unsigned int uY)
 {
   UI::ModuleWidget* pModuleWidget = QtModuleUIRegistry::instance()->createUI(pModule, 
-                                                                             pModule->getModuleDescriptor()->getModuleId(), 
+                                                                             pModule->getModuleURI(), 
                                                                              m_pHostModule,
                                                                              //m_pParent,
                                                                              m_pWorkspace);

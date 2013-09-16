@@ -19,7 +19,6 @@
 #ifndef NUGGET_MODULE_REGISTRY_H_
 #define NUGGET_MODULE_REGISTRY_H_
 
-#include <clay-core/base/ModuleDescriptor.h>
 #include <clay-core/registry/ModuleRegistry.h>
 
 NAMESPACE_CLAY_NUGGET_BEGIN

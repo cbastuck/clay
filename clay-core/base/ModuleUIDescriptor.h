@@ -20,7 +20,6 @@
 #define MODULEUIDESCRIPTOR_H_
 
 #include <clay-core/base/ClayDefines.h>
-#include <clay-core/base/ModuleDescriptor.h>
 
 #include <boost/function.hpp>
 
@@ -38,9 +37,6 @@ class ModuleUIRegistry;
 class ModuleUIDescriptorTraits
 {
 public:
-  //typedef boost::function3<ModuleWidget*, Module*, Host*, void*> tFactoryMethod;
-  //typedef boost::function1<void, ModuleWidget*>                  tDestroyMethod;
-
   typedef ModuleWidget* (*tFactoryMethod)(Module*, Host*, void*);
   typedef void          (*tDestroyMethod)(ModuleWidget*);
 };
@@ -53,11 +49,9 @@ public:
 
   ModuleUIDescriptor(ModuleUIDescriptorTraits::tFactoryMethod aFactory,
                      ModuleUIDescriptorTraits::tDestroyMethod aDestroy,
-                     ModuleDescriptorTraits::tModuleID        aModuleID,
-                     ModuleDescriptorTraits::tNamespaceID     aNamespaceID);
+                     const char* moduleURI);
   
-  ModuleDescriptorTraits::tModuleID    getModuleId() const;
-  ModuleDescriptorTraits::tNamespaceID getNamespaceId() const;
+  const char* getModuleURI() const;
 
   ModuleUIDescriptorTraits::tFactoryMethod getFactory() const;
   ModuleUIDescriptorTraits::tDestroyMethod getDestroyer() const;
@@ -67,15 +61,13 @@ public:
 private:
   ModuleUIDescriptorTraits::tFactoryMethod m_aFactory;
   ModuleUIDescriptorTraits::tDestroyMethod m_aDestroy;
-  ModuleDescriptorTraits::tModuleID        m_aModuleID;
-  ModuleDescriptorTraits::tNamespaceID     m_aNamespaceID;
+  const char* m_moduleURI;
 };
 
 //------------------------------------ModuleUIDescriptor
 inline ModuleUIDescriptor::ModuleUIDescriptor()
   : m_aFactory(NULL),
-    m_aModuleID(0),
-    m_aNamespaceID(0)
+    m_moduleURI(NULL)
 {
 
 }
@@ -83,26 +75,19 @@ inline ModuleUIDescriptor::ModuleUIDescriptor()
 //------------------------------------ModuleUIDescriptor
 inline ModuleUIDescriptor::ModuleUIDescriptor(ModuleUIDescriptorTraits::tFactoryMethod aFactory,
                                               ModuleUIDescriptorTraits::tDestroyMethod aDestroy,
-                                              ModuleDescriptorTraits::tModuleID        aModuleID,
-                                              ModuleDescriptorTraits::tNamespaceID     aNamespaceID)
+                                              const char* moduleURI)
   : m_aFactory(aFactory),
     m_aDestroy(aDestroy),
-    m_aModuleID(aModuleID),
-    m_aNamespaceID(aNamespaceID)
+    m_moduleURI(moduleURI)
 {
   
 }
 
 //------------------------------------getModuleID
-inline ModuleDescriptorTraits::tModuleID ModuleUIDescriptor::getModuleId() const
+inline const char* ModuleUIDescriptor::getModuleURI() const
 {
-  return m_aModuleID;  
-}
-
-//------------------------------------getNamespaceID
-inline ModuleDescriptorTraits::tNamespaceID ModuleUIDescriptor::getNamespaceId() const
-{
-  return m_aNamespaceID;
+  return m_moduleURI;
+;  
 }
 
 //------------------------------------getFactory

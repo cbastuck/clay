@@ -49,9 +49,7 @@ void ModuleUIRegistry::deInit()
 //---------------------------------------------registerModuleUI
 void ModuleUIRegistry::registerModuleUI(const ModuleUIDescriptor& aDescriptor)
 {
-  ModuleDescriptorTraits::tCompoundIdentifier aCompoundID = ModuleDescriptorTraits::encode(aDescriptor.getModuleId(), 
-                                                                                           aDescriptor.getNamespaceId());
-  m_collRegisteredUIDescriptors.insert(std::make_pair(aCompoundID, aDescriptor));
+  m_collRegisteredUIDescriptors.insert(std::make_pair(aDescriptor.getModuleURI(), aDescriptor));
 }
 
 //---------------------------------------------registerModuleUIs

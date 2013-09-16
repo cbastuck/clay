@@ -22,6 +22,8 @@
 
 #include "ClayTypeMapping.h"
 
+#include <boost/functional/factory.hpp>
+
 #include <sstream>
 
 namespace CLAY
@@ -81,30 +83,30 @@ namespace CLAY
     {
       using namespace ClayTypeMapping;
 
-      m_collTypeMappings[getType<float>()][getType<unsigned int>()]    = ConversionModule<AssignValueConverter<float, unsigned int> >::tDescriptor::create;
-      m_collTypeMappings[getType<float>()][getType<int>()]             = ConversionModule<AssignValueConverter<float, int> >::tDescriptor::create;
-      m_collTypeMappings[getType<float>()][getType<short>()]           = ConversionModule<AssignValueConverter<float, short> >::tDescriptor::create;
-      m_collTypeMappings[getType<float>()][getType<unsigned short>()]  = ConversionModule<AssignValueConverter<float, unsigned short> >::tDescriptor::create;
-      m_collTypeMappings[getType<float>()][getType<double>()]          = ConversionModule<AssignValueConverter<float, double> >::tDescriptor::create;
+      m_collTypeMappings[getType<float>()][getType<unsigned int>()]    = boost::factory<ConversionModule<AssignValueConverter<float, unsigned int> >* >();
+      m_collTypeMappings[getType<float>()][getType<int>()]             = boost::factory<ConversionModule<AssignValueConverter<float, int> >* >();
+      m_collTypeMappings[getType<float>()][getType<short>()]           = boost::factory<ConversionModule<AssignValueConverter<float, short> >* >();
+      m_collTypeMappings[getType<float>()][getType<unsigned short>()]  = boost::factory<ConversionModule<AssignValueConverter<float, unsigned short> >* >();
+      m_collTypeMappings[getType<float>()][getType<double>()]          = boost::factory<ConversionModule<AssignValueConverter<float, double> >* >();
 
-      m_collTypeMappings[getType<double>()][getType<unsigned int>()]   = ConversionModule<AssignValueConverter<double, unsigned int> >::tDescriptor::create;
-      m_collTypeMappings[getType<double>()][getType<int>()]            = ConversionModule<AssignValueConverter<double, int> >::tDescriptor::create;
-      m_collTypeMappings[getType<double>()][getType<short>()]          = ConversionModule<AssignValueConverter<double, short> >::tDescriptor::create;
-      m_collTypeMappings[getType<double>()][getType<unsigned short>()] = ConversionModule<AssignValueConverter<double, unsigned short> >::tDescriptor::create;
-      m_collTypeMappings[getType<double>()][getType<float>()]          = ConversionModule<AssignValueConverter<double, float> >::tDescriptor::create;
+      m_collTypeMappings[getType<double>()][getType<unsigned int>()]   = boost::factory<ConversionModule<AssignValueConverter<double, unsigned int> >* >();
+      m_collTypeMappings[getType<double>()][getType<int>()]            = boost::factory<ConversionModule<AssignValueConverter<double, int> >* >();
+      m_collTypeMappings[getType<double>()][getType<short>()]          = boost::factory<ConversionModule<AssignValueConverter<double, short> >* >();
+      m_collTypeMappings[getType<double>()][getType<unsigned short>()] = boost::factory<ConversionModule<AssignValueConverter<double, unsigned short> >* >();
+      m_collTypeMappings[getType<double>()][getType<float>()]          = boost::factory<ConversionModule<AssignValueConverter<double, float> >* >();
 
-      m_collTypeMappings[getType<int>()][getType<unsigned int>()]      = ConversionModule<AssignValueConverter<int, unsigned int> >::tDescriptor::create;
-      m_collTypeMappings[getType<int>()][getType<double>()]            = ConversionModule<AssignValueConverter<int, double> >::tDescriptor::create;
-      m_collTypeMappings[getType<int>()][getType<short>()]             = ConversionModule<AssignValueConverter<int, short> >::tDescriptor::create;
-      m_collTypeMappings[getType<int>()][getType<unsigned short>()]    = ConversionModule<AssignValueConverter<int, unsigned short> >::tDescriptor::create;
-      m_collTypeMappings[getType<int>()][getType<float>()]             = ConversionModule<AssignValueConverter<int, float> >::tDescriptor::create;
+      m_collTypeMappings[getType<int>()][getType<unsigned int>()]      = boost::factory<ConversionModule<AssignValueConverter<int, unsigned int> >* >();
+      m_collTypeMappings[getType<int>()][getType<double>()]            = boost::factory<ConversionModule<AssignValueConverter<int, double> >* >();
+      m_collTypeMappings[getType<int>()][getType<short>()]             = boost::factory<ConversionModule<AssignValueConverter<int, short> >* >();
+      m_collTypeMappings[getType<int>()][getType<unsigned short>()]    = boost::factory<ConversionModule<AssignValueConverter<int, unsigned short> >* >();
+      m_collTypeMappings[getType<int>()][getType<float>()]             = boost::factory<ConversionModule<AssignValueConverter<int, float> >* >();
 
-      m_collTypeMappings[getType<unsigned int>()][getType<unsigned int>()]   = ConversionModule<AssignValueConverter<unsigned int, unsigned int> >::tDescriptor::create;
-      m_collTypeMappings[getType<unsigned int>()][getType<double>()]         = ConversionModule<AssignValueConverter<unsigned int, double> >::tDescriptor::create;
-      m_collTypeMappings[getType<unsigned int>()][getType<short>()]          = ConversionModule<AssignValueConverter<unsigned int, short> >::tDescriptor::create;
-      m_collTypeMappings[getType<unsigned int>()][getType<unsigned short>()] = ConversionModule<AssignValueConverter<unsigned int, unsigned short> >::tDescriptor::create;
-      m_collTypeMappings[getType<unsigned int>()][getType<float>()]          = ConversionModule<AssignValueConverter<unsigned int, float> >::tDescriptor::create;
-      m_collTypeMappings[getType<unsigned int>()][getType<std::string>()]    = ConversionModule<ValueStringConverter<unsigned int> >::tDescriptor::create;
+      m_collTypeMappings[getType<unsigned int>()][getType<unsigned int>()]   = boost::factory<ConversionModule<AssignValueConverter<unsigned int, unsigned int> >* >();
+      m_collTypeMappings[getType<unsigned int>()][getType<double>()]         = boost::factory<ConversionModule<AssignValueConverter<unsigned int, double> >* >();
+      m_collTypeMappings[getType<unsigned int>()][getType<short>()]          = boost::factory<ConversionModule<AssignValueConverter<unsigned int, short> >* >();
+      m_collTypeMappings[getType<unsigned int>()][getType<unsigned short>()] = boost::factory<ConversionModule<AssignValueConverter<unsigned int, unsigned short> >* >();
+      m_collTypeMappings[getType<unsigned int>()][getType<float>()]          = boost::factory<ConversionModule<AssignValueConverter<unsigned int, float> >* >();
+      m_collTypeMappings[getType<unsigned int>()][getType<std::string>()]    = boost::factory<ConversionModule<ValueStringConverter<unsigned int> >* >();
     }
 
     //---------------------------------------------deInit

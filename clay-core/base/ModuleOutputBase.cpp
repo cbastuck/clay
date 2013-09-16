@@ -124,7 +124,6 @@ bool ModuleOutputBase::disconnect()
 {
   if(isConnected()) //otherwise this call does not make any sense
   {
-    //m_pConnectedInput = NULL;
     m_aConnectedInputs.clear();
 
     CLAY_ASSERT(m_pParent);

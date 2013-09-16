@@ -21,7 +21,9 @@
 
 //clay-core
 #include <clay-core/base/ClayDefines.h>
-#include <clay-core/base/ModuleDescriptor.h>
+
+#include <boost/function.hpp>
+#include <boost/functional/factory.hpp>
 
 //STL
 #include <map>
@@ -42,50 +44,44 @@ class Module;
 class ModuleRegistry
 {
 public:
-  typedef std::map<ModuleDescriptorTraits::tModuleID,    ModuleDescriptorBase>  tDescriptorCollection;
-  typedef std::map<ModuleDescriptorTraits::tNamespaceID, tDescriptorCollection> tNamespaceCollection;
+  typedef boost::function<Module*(const tString&)> tModuleFactory;
+  typedef std::map<tString, tModuleFactory> tFactoryCollection;
 
-  typedef tDescriptorCollection::iterator       descr_iterator;
-  typedef tDescriptorCollection::const_iterator const_descr_iterator;
-
-  typedef tNamespaceCollection::iterator        namespace_iterator;
-  typedef tNamespaceCollection::const_iterator  const_namespace_iterator;
-
+  typedef tFactoryCollection::iterator       iterator;
+  typedef tFactoryCollection::const_iterator const_iterator;
+  
   CLAY_DLL_EXPORT ModuleRegistry();
   CLAY_DLL_EXPORT ~ModuleRegistry();
 
+  CLAY_DLL_EXPORT bool registerModule(const char* moduleURI, tModuleFactory fac);
   CLAY_DLL_EXPORT bool registerModules(const ModuleRegistry& aOther);
   template<class T>
   CLAY_DLL_EXPORT void registerModule(const T& aModule); //inline
   template<class T>
   CLAY_DLL_EXPORT void registerModule(); //inline 
-  CLAY_DLL_EXPORT void registerModule(const ModuleDescriptorBase& aDescriptor);
   CLAY_DLL_EXPORT bool registerModules(NUGGET::IClayNugget* pNugget);
 
   template<class T>
-  CLAY_DLL_EXPORT T* createItem(const tString& sRuntimeModuleId = ""); //inline
+  CLAY_DLL_EXPORT T* createItem(const tString& sRuntimeModuleId); //inline
 
-  CLAY_DLL_EXPORT Module* createItem(ModuleDescriptorTraits::tModuleID    aModuleId,
-                                      ModuleDescriptorTraits::tNamespaceID aNamespaceId = ModuleDescriptorTraits::defaultNamespace,
-                                      const tString& sRuntimeModuleId = "");
+  CLAY_DLL_EXPORT Module* createItem(const char* sModuleURI, const tString& sRuntimeModuleId);
   CLAY_DLL_EXPORT void destroyItem(Module* pModule);
 
-  CLAY_DLL_EXPORT unsigned int getNumModules() const;
-  CLAY_DLL_EXPORT unsigned int getNumNamespaces() const;
+  CLAY_DLL_EXPORT unsigned int getNumRegisteredModules() const;
 
-  CLAY_DLL_EXPORT const ModuleDescriptorBase* getModuleDescriptor(unsigned int uIdx) const;
+  CLAY_DLL_EXPORT const char* getModuleURI(unsigned int uIdx) const;
+  CLAY_DLL_EXPORT tModuleFactory getModuleFactory(unsigned int uIdx) const;
 
-  CLAY_DLL_EXPORT namespace_iterator beginNamespace(); //inline 
-  CLAY_DLL_EXPORT namespace_iterator endNamespace();   //inline 
-
-  CLAY_DLL_EXPORT const_namespace_iterator beginNamespace() const; //inline
-  CLAY_DLL_EXPORT const_namespace_iterator endNamespace()   const; //inline
-
+  CLAY_DLL_EXPORT const_iterator begin() const; //inline 
+  CLAY_DLL_EXPORT const_iterator end() const;   //inline 
+  
 protected:  
-  CLAY_DLL_EXPORT void addItem(const ModuleDescriptorBase& aDescriptor);
+  CLAY_DLL_EXPORT bool addItem(const char* moduleURI, tModuleFactory fac);
+
+  const_iterator getEntry(unsigned int uIdx) const;
 
 private:
-  tNamespaceCollection  m_collRegisteredNamespaces;
+  tFactoryCollection m_registeredModules;
 };
 
 //---------------------------------------------
@@ -104,47 +100,26 @@ inline void ModuleRegistry::registerModule(const T& aModule)
 template<class T>
 inline void ModuleRegistry::registerModule()
 {
-  typedef typename T::tDescriptor tDescriptor;
-
-  tDescriptor aDescriptor;
-  tDescriptorCollection& aDstNamespace = m_collRegisteredNamespaces[tDescriptor::getNamespaceId()];
-
-  tDescriptorCollection::value_type aModuleFactory(tDescriptor::getModuleId(), aDescriptor);
-
-  aDstNamespace.insert(aModuleFactory);
+  m_registeredModules.insert(std::make_pair(T::staticModuleURI(), boost::factory<T*>()));
 }
 
 //---------------------------------------------createItem
 template<class T>
 inline T* ModuleRegistry::createItem(const tString& sRuntimeModuleId)
 {
-  return static_cast<T*>(createItem(T::tDescriptor::eModuleId,
-                                    T::tDescriptor::eNamespaceId, 
-                                    sRuntimeModuleId));
+  return static_cast<T*>(createItem(T::getModuleURI(), sRuntimeModuleId));
 }
 
-//---------------------------------------------beginNamespace
-inline ModuleRegistry::namespace_iterator ModuleRegistry::beginNamespace()
+//---------------------------------------------begin
+inline ModuleRegistry::const_iterator ModuleRegistry::begin() const
 { 
-  return m_collRegisteredNamespaces.begin(); 
+  return m_registeredModules.begin(); 
 }
 
-//---------------------------------------------endNamespace
-inline ModuleRegistry::namespace_iterator ModuleRegistry::endNamespace()  
+//---------------------------------------------end
+inline ModuleRegistry::const_iterator ModuleRegistry::end() const
 { 
-  return m_collRegisteredNamespaces.end(); 
-}
-
-//---------------------------------------------beginNamespace
-inline ModuleRegistry::const_namespace_iterator ModuleRegistry::beginNamespace() const
-{ 
-  return m_collRegisteredNamespaces.begin(); 
-}
-
-//---------------------------------------------endNamespace
-inline ModuleRegistry::const_namespace_iterator ModuleRegistry::endNamespace() const
-{ 
-  return m_collRegisteredNamespaces.end(); 
+  return m_registeredModules.end(); 
 }
 
 }

@@ -19,18 +19,22 @@
 #ifndef TYPE_CONVERSION_H_
 #define TYPE_CONVERSION_H_
 
-#include <clay-core/base/ModuleDescriptor.h>
-
 #include "ClayTypes.h"
+#include <clay-core/base/ClayDefines.h>
+
+#include <boost/function.hpp>
 
 #include <map>
 
-namespace CLAY{ namespace MODEL{
+namespace CLAY{
+class Module;
+
+namespace MODEL{
 
 class ClayTypeConversion
 {
 private:
-  typedef ModuleDescriptorTraits::tFactoryMethod               tConversionModuleFactory;
+  typedef boost::function<Module*(const tString&)>             tConversionModuleFactory;
   typedef std::map<ClayTypes::Type, tConversionModuleFactory>  tConvertModules;
   typedef std::map<ClayTypes::Type, tConvertModules>           tTypeMappingMatrix;
 

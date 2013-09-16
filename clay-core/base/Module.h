@@ -55,8 +55,7 @@ public:
   enum ProcessResultCode{Process_OK, Process_ERROR, ProcessNotImplemented_ERROR, Process_NotPossible};
   enum CompileResultCode{Compile_OK, Compile_ERROR, UnresolvedDependencies_ERROR, NothingToCompile_Error};
   enum ConnectResultCode{Connect_OK, Connect_ERROR, NoSuitableConnection_ERROR};
-
-  typedef std::deque<int>::size_type tSize; //int is just a dummy
+  enum ConnectionStrategy{ CLEVER_CONNECT_MODE, TEST_CLEVER_CONNECT_MODE };
 
   typedef tInputCollection::iterator  tInputIterator;
   typedef tOutputCollection::iterator tOutputIterator;
@@ -67,37 +66,76 @@ public:
   CLAY_DLL_EXPORT Module(const tString& sModuleRuntimeId);
   CLAY_DLL_EXPORT virtual ~Module();
 
+  CLAY_DLL_EXPORT bool init(const tString& xml);
   CLAY_DLL_EXPORT virtual bool init(XERCES::DOMNode* pNode);
   CLAY_DLL_EXPORT virtual void deInit();
 
-  CLAY_DLL_EXPORT virtual const ModuleDescriptorBase* getModuleDescriptor() const;
+  //instance/class identification 
+  CLAY_DLL_EXPORT virtual const char* getModuleURI() const = 0;
+  CLAY_DLL_EXPORT inline const tString& getRuntimeModuleID() const;
 
+  //persistence
   CLAY_DLL_EXPORT virtual bool save(XERCES::DOMElement* pNode);
-  CLAY_DLL_EXPORT virtual bool load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections = NULL, tConnectionMap* pOutputConnections = NULL);
+  CLAY_DLL_EXPORT virtual bool load(XERCES::DOMElement* pNode);
+  CLAY_DLL_EXPORT virtual bool load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections, tConnectionMap* pOutputConnections);
 
+  //inputs - outputs
+  CLAY_DLL_EXPORT inline virtual size_t getNumInputs() const;
+  CLAY_DLL_EXPORT inline virtual size_t getNumOutputs() const;
+
+  CLAY_DLL_EXPORT inline tInputIterator beginInput();
+  CLAY_DLL_EXPORT inline tInputIterator endInput();
+
+  CLAY_DLL_EXPORT inline tOutputIterator beginOutput();
+  CLAY_DLL_EXPORT inline tOutputIterator endOutput();
+
+  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (size_t i) const;
+  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (const tString& sInputName) const;
+  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(size_t i) const;
+  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(const tString& sOutputName) const;
+  CLAY_DLL_EXPORT virtual ModuleOutputBase* duplicateModuleOutput(ModuleOutputBase* pOriginal);
+    
+  //io connections
+  CLAY_DLL_EXPORT virtual bool canConnectFrom(Module* pPredecessor);
+  CLAY_DLL_EXPORT virtual ConnectResultCode connectFrom(Module* pPredecessor);
+  CLAY_DLL_EXPORT virtual ConnectResultCode connectFrom(Module* pPredecessor, ConnectionStrategy eConnectionStrategy);
+  CLAY_DLL_EXPORT virtual ConnectResultCode connectFrom(const tString& sInputname, Module* pPredecessor, const tString& sOutputname);
+
+  CLAY_DLL_EXPORT virtual void disconnect();
+  CLAY_DLL_EXPORT virtual void disconnect(ModuleOutputBase* pOutput);
+  CLAY_DLL_EXPORT virtual void disconnect(ModuleInputBase* pInput);
+
+  CLAY_DLL_EXPORT void getInputConnectionsFrom(Module* pOther, tInputCollection& collDst);
+  CLAY_DLL_EXPORT void getOutputConnectionsTo (Module* pOther, tOutputCollection& collDst);
+  
+  //processing
+  CLAY_DLL_EXPORT virtual CompileResultCode shapeProcess(ClayShaper* pShaper, ClayExecutable& aTarget);
+  CLAY_DLL_EXPORT virtual ProcessResultCode process();
+
+  //traversal
+  template<class tCallback>
+  void visitTraversal(tCallback aVisitCallback);
+
+  //signals
+  typedef CLAY::Signal<boost::function<void(ModuleOutputBase*)> > tOutputActivity;
+  tOutputActivity signalModuleOutputRegistered;
+  tOutputActivity signalModuleOutputUnregistered;
+  tOutputActivity signalModuleOutputConnected;
+  tOutputActivity signalModuleOutputDisconnected;
+
+  typedef CLAY::Signal<boost::function1<void, ModuleInputBase*> > tInputActivity;
+  tInputActivity signalModuleInputRegistered;
+  tInputActivity signalModuleInputUnregistered;
+  tInputActivity signalModuleInputConnected;
+  tInputActivity signalModuleInputDisconnected;
+
+protected:
+  CLAY_DLL_EXPORT virtual bool loadImpl(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections, tConnectionMap* pOutputConnections);
   CLAY_DLL_EXPORT virtual bool saveModuleInput(XERCES::DOMElement* pParent, ModuleInputBase*  pModuleInput);
   CLAY_DLL_EXPORT virtual bool loadModuleInput(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections  = NULL);
 
   CLAY_DLL_EXPORT virtual bool saveModuleOutput(XERCES::DOMElement* pParent, ModuleOutputBase* pModuleOutput);
   CLAY_DLL_EXPORT virtual bool loadModuleOutput(XERCES::DOMElement* pNode, tConnectionMap* pOutputConnections = NULL);
-
-  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (tSize i) const;
-  CLAY_DLL_EXPORT virtual ModuleInputBase*  getInput (const tString& sInputName) const;
-  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(tSize i) const;
-  CLAY_DLL_EXPORT virtual ModuleOutputBase* getOutput(const tString& sOutputName) const;
-  CLAY_DLL_EXPORT virtual ModuleOutputBase* duplicateModuleOutput(ModuleOutputBase* pOriginal);
-
-  enum ConnectionStrategy{ CLEVER_CONNECT_MODE, TEST_CLEVER_CONNECT_MODE };
-  CLAY_DLL_EXPORT virtual ConnectResultCode connectFrom(Module* pPredecessor, ConnectionStrategy eConnectionStrategy=CLEVER_CONNECT_MODE);
-  CLAY_DLL_EXPORT virtual ConnectResultCode connectFrom(const tString& sInputname, Module* pPredecessor, const tString& sOutputname);
-  CLAY_DLL_EXPORT virtual CompileResultCode shapeProcess(ClayShaper* pShaper, ClayExecutable& aTarget);
-  CLAY_DLL_EXPORT virtual ProcessResultCode process();
-
-  CLAY_DLL_EXPORT virtual bool canConnectFrom(Module* pPredecessor);
-
-  CLAY_DLL_EXPORT virtual void disconnect();
-  CLAY_DLL_EXPORT virtual void disconnect(ModuleOutputBase* pOutput);
-  CLAY_DLL_EXPORT virtual void disconnect(ModuleInputBase* pInput);
 
   CLAY_DLL_EXPORT virtual void onInputDisconnected (ModuleInputBase* pInput);
   CLAY_DLL_EXPORT virtual void onOutputDisconnected(ModuleOutputBase* pOutput);
@@ -110,106 +148,104 @@ public:
   CLAY_DLL_EXPORT bool unregisterInputs (bool bDelete=true);
   CLAY_DLL_EXPORT bool unregisterOutputs(bool bDelete=true);
 
-  CLAY_DLL_EXPORT void getInputConnectionsFrom(Module* pOther, tInputCollection& collDst);
-  CLAY_DLL_EXPORT void getOutputConnectionsTo (Module* pOther, tOutputCollection& collDst);
-
-  //inline stuff
-  CLAY_DLL_EXPORT virtual tSize getNumInputs()  const{ return m_collInputs.size(); }
-  CLAY_DLL_EXPORT virtual tSize getNumOutputs() const{ return m_collOutputs.size(); }
-
-  CLAY_DLL_EXPORT tInputIterator beginInput(){ return m_collInputs.begin(); }
-  CLAY_DLL_EXPORT tInputIterator endInput()  { return m_collInputs.end(); }
-
-  CLAY_DLL_EXPORT tOutputIterator beginOutput(){ return m_collOutputs.begin(); }
-  CLAY_DLL_EXPORT tOutputIterator endOutput()  { return m_collOutputs.end(); }
-
-  CLAY_DLL_EXPORT const tString& getRuntimeModuleID() const  { return m_sModuleRuntimeID; }
-  CLAY_DLL_EXPORT void setRuntimeModuleID(const tString& sID){ m_sModuleRuntimeID = sID; }
-
-  //methods to query the module state
-  CLAY_DLL_EXPORT bool isInitialized() const;
-  CLAY_DLL_EXPORT bool isActive() const;
-
-  //signals that are emitted by this class
-  typedef boost::function0<void> tEmptyFunc;
-  CLAY::Signal<tEmptyFunc> signalModuleInitialized;
-  CLAY::Signal<tEmptyFunc> signalModuleActive;
-  CLAY::Signal<tEmptyFunc> signalModuleUnitialized;
-  CLAY::Signal<tEmptyFunc> signalModuleInactive;
-
-  typedef boost::function1<void, ModuleOutputBase*> tOutputFunc;
-  CLAY::Signal<tOutputFunc> signalModuleOutputRegistered;
-  CLAY::Signal<tOutputFunc> signalModuleOutputUnregistered;
-  CLAY::Signal<tOutputFunc> signalModuleOutputConnected;
-  CLAY::Signal<tOutputFunc> signalModuleOutputDisconnected;
-
-  typedef boost::function1<void, ModuleInputBase*> tInputFunc;
-  CLAY::Signal<tInputFunc> signalModuleInputRegistered;
-  CLAY::Signal<tInputFunc> signalModuleInputUnregistered;
-  CLAY::Signal<tInputFunc> signalModuleInputConnected;
-  CLAY::Signal<tInputFunc> signalModuleInputDisconnected;
-
-  //use this template for traversal
-  template<class tCallback>
-  void visitTraversal(tCallback aVisitCallback)
-  {
-    std::set<Module*> collVisited; //use this data structure to keep track of visited modules
-    visitTraversal(aVisitCallback, collVisited);
-  }
+  CLAY_DLL_EXPORT inline void setRuntimeModuleID(const tString& sID);
 
   //traverse the graph of this module starting - follow connected modules
   template<class tCallback>
-  void visitTraversal(tCallback aVisitCallback,
-                      std::set<Module*>& collVisitedModules)
-  {
-    collVisitedModules.insert(this); //mark this module as visited - avoid cycles ...
-    aVisitCallback(this); // ... and invoke the callback on it
+  void visitTraversal(tCallback aVisitCallback, std::set<Module*>& collVisitedModules);
 
-    tOutputIterator it  = beginOutput();
-    tOutputIterator end = endOutput();
-    for(; it!=end; ++it)
+private:
+  friend class ModuleInputBase;
+  friend class ModuleOutputBase;
+
+  tInputCollection m_collInputs;
+  tOutputCollection m_collOutputs;
+  tString m_sModuleRuntimeID;
+};
+
+//---------------------------------------------
+//---------------------------------------------
+//---------------------------------------------
+
+//---------------------------------------------
+inline size_t Module::getNumInputs() const
+{ 
+  return m_collInputs.size(); 
+}
+
+//---------------------------------------------
+inline size_t Module::getNumOutputs() const
+{
+  return m_collOutputs.size(); 
+}
+
+//---------------------------------------------
+inline Module::tInputIterator Module::beginInput()
+{
+  return m_collInputs.begin(); 
+}
+
+//---------------------------------------------
+inline Module::tInputIterator Module::endInput()  
+{ 
+  return m_collInputs.end(); 
+}
+
+//---------------------------------------------
+inline Module::tOutputIterator Module::beginOutput()
+{
+  return m_collOutputs.begin(); 
+}
+
+//---------------------------------------------
+inline Module::tOutputIterator Module::endOutput()  
+{ 
+  return m_collOutputs.end(); 
+}
+
+//---------------------------------------------
+inline const tString& Module::getRuntimeModuleID() const  
+{ 
+  return m_sModuleRuntimeID; 
+}
+
+//---------------------------------------------
+inline void Module::setRuntimeModuleID(const tString& sID)
+{ 
+  m_sModuleRuntimeID = sID; 
+}
+
+//---------------------------------------------
+template<class tCallback>
+inline void Module::visitTraversal(tCallback aVisitCallback)
+{
+  std::set<Module*> collVisited; //use this data structure to keep track of visited modules
+  visitTraversal(aVisitCallback, collVisited);
+}
+
+//---------------------------------------------
+template<class tCallback>
+void Module::visitTraversal(tCallback aVisitCallback, std::set<Module*>& collVisitedModules)
+{
+  collVisitedModules.insert(this); //mark this module as visited - avoid cycles ...
+  aVisitCallback(this); // ... and invoke the callback on it
+
+  tOutputIterator it  = beginOutput();
+  tOutputIterator end = endOutput();
+  for(; it!=end; ++it)
+  {
+    ModuleOutputBase* pCurrent = *it;
+    for(unsigned int i=0, n=pCurrent->getNumConnections(); i<n; ++i)
     {
-      ModuleOutputBase* pCurrent = *it;
-      for(unsigned int i=0, n=pCurrent->getNumConnections(); i<n; ++i)
+      Module* pParent = pCurrent->getTargetModule(i);
+      CLAY_ASSERT(pParent);
+      if(collVisitedModules.find(pParent) == collVisitedModules.end()) //then the node has not been visited yet
       {
-        Module* pParent = pCurrent->getTargetModule(i);
-        CLAY_ASSERT(pParent);
-        if(collVisitedModules.find(pParent) == collVisitedModules.end()) //then the node has not been visited yet
-        {
-          pParent->visitTraversal(aVisitCallback, collVisitedModules);
-        }
+        pParent->visitTraversal(aVisitCallback, collVisitedModules);
       }
     }
   }
-
-protected: //methods
-
-  //module states enumeration
-  enum ModuleState
-  {
-    MODULE_INITIALIZED   = 1 << 0,
-    MODULE_ACTIVE        = 1 << 1
-  };
-
-  enum NegativeModuleState
-  {
-    MODULE_UNINITIALIZED = 1 << 0,
-    MODULE_INACTIVE      = 1 << 1
-  };
-
-  CLAY_DLL_EXPORT void setModuleState(ModuleState eModuleState);
-  CLAY_DLL_EXPORT void setModuleState(NegativeModuleState eModuleState);
-
-  void resetModuleState();
-
-protected: //members
-  tInputCollection m_collInputs;
-  tOutputCollection m_collOutputs;
-
-  tString m_sModuleRuntimeID;
-
-  unsigned int m_uState;
-};
+}
 
 }
 

@@ -21,7 +21,6 @@
 
 //clay-core
 #include <clay-core/base/ClayDefines.h>
-#include <clay-core/base/ModuleDescriptor.h>
 #include <clay-core/base/ModuleUIDescriptor.h>
 
 //STL
@@ -52,8 +51,7 @@ public:
   CLAY_DLL_EXPORT UI::ModuleUIDescriptor* getModuleUIDescriptor(unsigned int uIdx);
 
 protected:
-  typedef std::map<ModuleDescriptorTraits::tCompoundIdentifier, 
-                   ModuleUIDescriptor> tModuleUIFactoryCollection;
+  typedef std::map<const char*, ModuleUIDescriptor> tModuleUIFactoryCollection;
 
   tModuleUIFactoryCollection m_collRegisteredUIDescriptors;
 };
@@ -66,15 +64,9 @@ protected:
 template<class MODULE, class UI>
 inline void ModuleUIRegistry::registerModuleUI()
 {
-  typedef typename MODULE::tDescriptor tModuleDescriptor;
-  ModuleDescriptorTraits::tCompoundIdentifier aCompoundID = ModuleDescriptorTraits::encode(tModuleDescriptor::getModuleId(), 
-                                                                                           tModuleDescriptor::getNamespaceId());
-
-  CLAY_ASSERT(m_collRegisteredUIDescriptors.find(aCompoundID) == m_collRegisteredUIDescriptors.end());
   ModuleUIDescriptor aDescriptor(UI::create, 
                                  UI::destroy, 
-                                 tModuleDescriptor::getModuleId(), 
-                                 tModuleDescriptor::getNamespaceId());
+                                 MODULE::staticModuleURI());
   registerModuleUI(aDescriptor);
 }
 

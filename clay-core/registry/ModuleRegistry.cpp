@@ -19,7 +19,6 @@
 #include "ModuleRegistry.h"
 
 #include <clay-core/helper/SharedLibrary.h>
-#include <clay-core/base/ModuleDescriptor.h>
 #include <clay-core/base/Module.h>
 
 #include <clay-core/nugget/IClayNugget.h> //CLAY::NUGGET support
@@ -38,59 +37,57 @@ ModuleRegistry::~ModuleRegistry()
 
 }
 
+//---------------------------------------------registerModule
+bool ModuleRegistry::registerModule(const char* moduleURI, tModuleFactory fac)
+{
+  return addItem(moduleURI, fac);
+}
+
 //---------------------------------------------registerModules
 bool ModuleRegistry::registerModules(const ModuleRegistry& aOther)
 {
-  ModuleRegistry::const_namespace_iterator it  = aOther.beginNamespace();
-  ModuleRegistry::const_namespace_iterator end = aOther.endNamespace();
+  ModuleRegistry::const_iterator it = aOther.begin();
+  ModuleRegistry::const_iterator end = aOther.end();
   for(; it!=end; ++it)
   {
-    ModuleDescriptorTraits::tNamespaceID aNamespaceId = it->first;
-
-    const tDescriptorCollection& aCollection = it->second;
-    ModuleRegistry::const_descr_iterator ti  = aCollection.begin();
-    ModuleRegistry::const_descr_iterator dne = aCollection.end();
-    for(; ti!=dne; ++ti)
-    {
-      addItem(ti->second);
-    }
+    addItem(it->first.c_str(), it->second);
   }
   return true;
-}
-
-//---------------------------------------------registerModule
-void ModuleRegistry::registerModule(const ModuleDescriptorBase& aDescriptor)
-{
-  addItem(aDescriptor);
 }
 
 //---------------------------------------------registerModules
 bool ModuleRegistry::registerModules(NUGGET::IClayNugget* pNugget)
 {
   unsigned int uNumModules = pNugget->getNumModules();
+  if(uNumModules == 0)
+  {
+    return false;
+  }
+
   for(unsigned int i=0; i<uNumModules; ++i)
   {
-    const ModuleDescriptorBase* pDescriptor = pNugget->getModuleDescriptor(i);
-    CLAY_ASSERT(pDescriptor);
-    registerModule(*pDescriptor);
+    const char* uri = pNugget->getModuleURI(i);
+    tModuleFactory fac = pNugget->getModuleFactory(i);
+    if(!uri || !fac)
+    {
+      return false;
+    }
+
+    if(!registerModule(uri, fac))
+    {
+      return false;
+    }
   }
-  return (uNumModules) ? true : false;
+  return true;
 }
 
 //---------------------------------------------createItem
-Module* ModuleRegistry::createItem(ModuleDescriptorTraits::tModuleID    aModuleId, 
-                                   ModuleDescriptorTraits::tNamespaceID aNamespaceId, 
-                                   const tString&                       sRuntimeModuleId)
+Module* ModuleRegistry::createItem(const char* sModuleURI, const tString& sRuntimeModuleId)
 {
-  namespace_iterator posNS = m_collRegisteredNamespaces.find(aNamespaceId);
-  if(posNS != m_collRegisteredNamespaces.end())
+  iterator pos = m_registeredModules.find(sModuleURI);
+  if(pos != m_registeredModules.end())
   {
-    tDescriptorCollection& collDescriptors = posNS->second;
-    descr_iterator posDescr = collDescriptors.find(aModuleId);
-    if(posDescr != collDescriptors.end())
-    {
-      return posDescr->second.create(sRuntimeModuleId);
-    }
+    return pos->second(sRuntimeModuleId);
   }
   CLAY_FAIL();
   return NULL;
@@ -99,59 +96,61 @@ Module* ModuleRegistry::createItem(ModuleDescriptorTraits::tModuleID    aModuleI
 //---------------------------------------------destroyItem
 void ModuleRegistry::destroyItem(Module* pModule)
 {
-  const ModuleDescriptorBase* pDescriptor = pModule->getModuleDescriptor();
-  CLAY_ASSERT(pDescriptor);
-  pDescriptor->getDestroyer()(pModule);
+  CLAY_ASSERT(pModule);
+  //TODO: before we called descriptors destroy method, check if this is ok
+  delete pModule;
 }
 
-//---------------------------------------------getNumModules
-unsigned int ModuleRegistry::getNumModules() const
+//---------------------------------------------getNumRegisteredModules
+unsigned int ModuleRegistry::getNumRegisteredModules() const
 {
-  unsigned int uRes = 0;
-  const_namespace_iterator it  = beginNamespace();
-  const_namespace_iterator end = endNamespace();
-  for(; it!=end; ++it)
+  return m_registeredModules.size();
+}
+
+//---------------------------------------------
+const char* ModuleRegistry::getModuleURI(unsigned int uIdx) const
+{
+  const_iterator it = getEntry(uIdx);
+  if(it == m_registeredModules.end())
   {
-    uRes += it->second.size();
+    return NULL;  
   }
-  return uRes;
+  return it->first.c_str();
 }
 
-//---------------------------------------------getNumNamespaces
-unsigned int ModuleRegistry::getNumNamespaces() const
+//---------------------------------------------
+ModuleRegistry::tModuleFactory ModuleRegistry::getModuleFactory(unsigned int uIdx) const
 {
-  return m_collRegisteredNamespaces.size();
-}
-
-//---------------------------------------------getModuleDescriptor
-const ModuleDescriptorBase* ModuleRegistry::getModuleDescriptor(unsigned int uIdx) const
-{
-  CLAY_ASSERT(getNumModules() > uIdx);
-  unsigned int uIter = 0;
-
-  const_namespace_iterator it  = beginNamespace();
-  const_namespace_iterator end = endNamespace();
-  for(; it!=end; ++it)
+  const_iterator it = getEntry(uIdx);
+  if(it == m_registeredModules.end())
   {
-    const tDescriptorCollection& collDesc = it->second;
-    tDescriptorCollection::const_iterator ti = collDesc.begin();
-    tDescriptorCollection::const_iterator dne = collDesc.end();
-    for(; ti!=dne; ++ti)
-    {
-      if(uIter == uIdx)
-      {
-        return &ti->second;
-      }
-      ++uIter;
-    }
+    return NULL;
   }
-  return NULL; //descriptor not found (invalid index?)
+  return it->second;
 }
 
 //---------------------------------------------addItem
-void ModuleRegistry::addItem(const ModuleDescriptorBase& aDescriptor)
+bool ModuleRegistry::addItem(const char* moduleURI, tModuleFactory fac)
 {
-  m_collRegisteredNamespaces[aDescriptor.getNamespaceId()][aDescriptor.getModuleId()] = aDescriptor;
+  tFactoryCollection::const_iterator pos = m_registeredModules.find(moduleURI);
+  if(pos != m_registeredModules.end())
+  {
+      return false;
+  }
+  
+  return m_registeredModules.insert(std::make_pair(moduleURI, fac)).second;
+}
+
+//---------------------------------------------
+ModuleRegistry::tFactoryCollection::const_iterator ModuleRegistry::getEntry(unsigned int uIdx) const
+{
+  if(uIdx < getNumRegisteredModules())
+  {
+    const_iterator it = m_registeredModules.begin();
+    std::advance(it, uIdx);
+    return it;
+  }
+  return m_registeredModules.end();
 }
 
 }

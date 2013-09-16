@@ -21,8 +21,8 @@
 
 //clay-core
 #include <clay-core/host/Host.h>
+#include <clay-core/base/Module.h>
 #include <clay-core/helper/Mutex.h>
-#include <clay-core/base/ModuleHelper.h>
 
 //STL
 #include <map>
@@ -36,34 +36,29 @@ class ModuleRegistry;
 
 namespace CLAY{ namespace MODULE{
 
-class HostModule : public ModuleHelper<HostModule,
-                                       HELPER::IntegerEncoding<'H','O','S','T'>::value,
-                                       HELPER::IntegerEncoding<'H','O','S','T'>::value >,
+class HostModule : public Module,
                    public Host
 {
 private:
-  typedef ModuleHelper<HostModule,
-                       HELPER::IntegerEncoding<'H','O','S','T'>::value,
-                       HELPER::IntegerEncoding<'H','O','S','T'>::value > tModuleBase;
-  typedef Host                                                           tHostBase;
-  typedef std::deque<Module*>                                            tInterfaceCollection;
+  typedef std::deque<Module*> tInterfaceCollection;
 
 public:   
   typedef tInterfaceCollection::iterator       tIterfaceInterator;
   typedef tInterfaceCollection::const_iterator tConstIterfaceInterator;
 
+  static const char* staticModuleURI();
+
   HostModule(const tString& sId);
   HostModule(const tString& sId, ModuleRegistry* pModuleRegistry);
   virtual ~HostModule();
+
+  virtual const char* getModuleURI() const;
 
   virtual bool init(XERCES::DOMNode* pNode);
   virtual void deInit(); 
 
   virtual bool save(XERCES::DOMElement* pNode);
   virtual bool load(XERCES::DOMElement* pNode, tConnectionMap* pInputConnections = NULL, tConnectionMap* pOutputConnections = NULL);
-
-  virtual void registerModuleInputs ();
-  virtual void registerModuleOutputs();
 
   virtual CompileResultCode shapeProcess(ClayShaper* pShaper, ClayExecutable& aTarget);
 
@@ -89,6 +84,9 @@ protected:
   bool restoreInput(XERCES::DOMElement* pNode);
 
 private:
+  virtual void registerModuleInputs();
+  virtual void registerModuleOutputs();
+
   typedef std::map<ModuleOutputBase*, Module*> tExportedOutOwnerMap;
   typedef std::map<ModuleInputBase*, Module*>  tExportedInOwnerMap;
 

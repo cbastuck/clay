@@ -29,12 +29,12 @@
 
 //boost
 #include <boost/bind.hpp>
-
+#include <boost/function.hpp>
 namespace CLAY{
   
 class SignalReceiver;
 
-template<class tCallback>
+template<class tCallback=boost::function<void()> >
 class Signal : public SignalBase
 {
 public:

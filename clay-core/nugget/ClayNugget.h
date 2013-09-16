@@ -53,9 +53,15 @@ public:
   }
 
   //---------------------------------------------getModuleRegistry
-  virtual const ModuleDescriptorBase* getModuleDescriptor(unsigned int uIdx)
+  virtual const char* getModuleURI(unsigned int uIdx)
   {
-    return m_aModuleRegistry.getModuleDescriptor(uIdx);
+    return m_aModuleRegistry.getModuleURI(uIdx);
+  }
+
+  //---------------------------------------------
+  virtual tModuleFactory getModuleFactory(unsigned int uIdx)
+  {
+    return m_aModuleRegistry.getModuleFactory(uIdx);
   }
 
   //---------------------------------------------getModuleUIRegistry
@@ -67,7 +73,7 @@ public:
   //---------------------------------------------getNumModules
   virtual unsigned int getNumModules()
   {
-    return m_aModuleRegistry.getNumModules();
+    return m_aModuleRegistry.getNumRegisteredModules();
   }
 
   //---------------------------------------------getNumModuleUIs

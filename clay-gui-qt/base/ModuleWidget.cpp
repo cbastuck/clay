@@ -60,7 +60,6 @@ ModuleWidget::ModuleWidget(Module* pModule, Host* pHost, QWidget* pParent)
     m_pHost(pHost),
     m_pModule(pModule),
     m_bLeftButtonPressed(false),
-    m_iStateActiveCounter(-1),
     m_aTimer(this),
     m_pUi(NULL)
 {
@@ -101,16 +100,6 @@ void ModuleWidget::init()
   setAcceptDrops(true);
 
   m_aTimer.start(TIMER_UNIT); //interval the timer is invoked
-
-  //visualize the state of the module
-  if(m_pModule->isActive())
-  {
-    onModuleInitStateChanged(true);
-  }
-  else if(m_pModule->isInitialized())
-  {
-    onModuleInitStateChanged(true);
-  }
 
   connectModuleSignals(); //call virtual method
 
@@ -247,28 +236,6 @@ ModuleUIDescriptor* ModuleWidget::getUIDescriptor()
 //---------------------------------------------connectModuleSignals
 void ModuleWidget::connectModuleSignals()
 {
-  /*
-  m_pModule->signalModuleActive.addSlot(&ModuleWidget::onModuleActiveStateChanged, this, true);
-  m_pModule->signalModuleInactive.addSlot(&ModuleWidget::onModuleActiveStateChanged, this, false);
-  m_pModule->signalModuleInitialized.addSlot(&ModuleWidget::onModuleInitStateChanged, this, true);
-  m_pModule->signalModuleUnitialized.addSlot(&ModuleWidget::onModuleInitStateChanged, this, false);
-
-  m_pModule->signalModuleInputRegistered.addSlot(&ModuleWidget::onModuleInputRegistered, this);
-  m_pModule->signalModuleInputUnregistered.addSlot(&ModuleWidget::onModuleInputUnregistered, this);
-  m_pModule->signalModuleInputConnected.addSlot(&ModuleWidget::onModuleInputConnected, this);
-  m_pModule->signalModuleInputDisconnected.addSlot(&ModuleWidget::onModuleInputDisconnected, this);
-
-  m_pModule->signalModuleOutputRegistered.addSlot(&ModuleWidget::onModuleOutputRegistered, this);
-  m_pModule->signalModuleOutputUnregistered.addSlot(&ModuleWidget::onModuleOutputUnregistered, this);
-  m_pModule->signalModuleOutputConnected.addSlot(&ModuleWidget::onModuleOutputConnected, this);
-  m_pModule->signalModuleOutputDisconnected.addSlot(&ModuleWidget::onModuleOutputDisconnected, this);
-  */
-
-  addConnection(&m_pModule->signalModuleActive, &ModuleWidget::onModuleActiveStateChanged, true);
-  addConnection(&m_pModule->signalModuleInactive, &ModuleWidget::onModuleActiveStateChanged, false);
-  addConnection(&m_pModule->signalModuleInitialized, &ModuleWidget::onModuleInitStateChanged, true);
-  addConnection(&m_pModule->signalModuleUnitialized, &ModuleWidget::onModuleInitStateChanged, false);
-
   addConnection(&m_pModule->signalModuleInputRegistered, &ModuleWidget::onModuleInputRegistered);
   addConnection(&m_pModule->signalModuleInputUnregistered, &ModuleWidget::onModuleInputUnregistered);
   addConnection(&m_pModule->signalModuleInputConnected, &ModuleWidget::onModuleInputConnected);
@@ -283,11 +250,6 @@ void ModuleWidget::connectModuleSignals()
 //---------------------------------------------disconnectModuleSignals
 void ModuleWidget::disconnectModuleSignals()
 {
-  removeConnections(&m_pModule->signalModuleActive);
-  removeConnections(&m_pModule->signalModuleInactive);
-  removeConnections(&m_pModule->signalModuleInitialized);
-  removeConnections(&m_pModule->signalModuleUnitialized);
-
   removeConnections(&m_pModule->signalModuleInputRegistered);
   removeConnections(&m_pModule->signalModuleInputUnregistered);
   removeConnections(&m_pModule->signalModuleInputConnected);
@@ -358,50 +320,12 @@ void ModuleWidget::onContextMenu(QAction*)
 void ModuleWidget::onTimer()
 {
   //do timer stuff
-  if(m_iStateActiveCounter >= 0)
-  {
-    if(m_iStateActiveCounter == 0)
-    {
-      onModuleActiveStateChanged(true);
-      m_iStateActiveCounter = -1; //reset
-      onModuleInitStateChanged(true); //not active anymore, but initialized
-    }
-    else
-    {
-      --m_iStateActiveCounter;
-    }
-  }
   signalOnTimerEvent.emit0();
-}
-
-//---------------------------------------------onModuleActiveStateChanged
-void ModuleWidget::onModuleActiveStateChanged(bool bActive)
-{
-  if(bActive && !widgetInActiveState()) //otherwise active state is still 'on'
-  {
-    //m_pUi->m_pStateIndicatorLabel->setText("A");
-    m_iStateActiveCounter = 1; //keep the signal for given time units
-  }
-}
-
-//---------------------------------------------onModuleInitStateChanged
-void ModuleWidget::onModuleInitStateChanged(bool bInitialized)
-{
-  if(bInitialized)
-  {
-    //m_pUi->m_pStateIndicatorLabel->setText("I");
-  }
-  else
-  {
-    //m_pUi->m_pStateIndicatorLabel->setText("X");
-  }
 }
 
 //---------------------------------------------onModuleInputRegistered
 void ModuleWidget::onModuleInputRegistered(ModuleInputBase* pInput)
 {
-  //deInitInputs();
-  //initInputs();
   createModuleInputWidget(pInput);
 }
 
@@ -427,8 +351,6 @@ void ModuleWidget::onModuleInputDisconnected(ModuleInputBase* pInput)
 //---------------------------------------------onModuleOutputRegistered
 void ModuleWidget::onModuleOutputRegistered(ModuleOutputBase* pOutput)
 {
-  //deInitOutputs();
-  //initOutputs();
   createModuleOutputWidget(pOutput);
 }
 
@@ -512,20 +434,7 @@ void ModuleWidget::paintEvent(QPaintEvent* pEvent)
 //---------------------------------------------dragEnterEvent
 void ModuleWidget::dragEnterEvent(QDragEnterEvent* pEvent)
 {
-  /*
-  if(pEvent->mimeData()->hasFormat(MODULE_INPUT_DRAG_DROP_FORMAT))
-  {
-    processModuleInputRequest(pEvent);
-  }
-  else if(pEvent->mimeData()->hasFormat(MODULE_OUTPUT_DRAG_DROP_FORMAT))
-  {
-    processModuleOutputRequest(pEvent);
-  }
-  else
-  {
-    pEvent->ignore();
-  }
-  */
+
 }
 
 //---------------------------------------------dragMoveEvent
@@ -561,22 +470,7 @@ void ModuleWidget::mousePressEvent(QMouseEvent* pEvent)
 //---------------------------------------------mouseMoveEvent
 void ModuleWidget::mouseMoveEvent(QMouseEvent* pEvent)
 {
-/*
-  QWidget* pPressedWidget = childAt(pEvent->pos());
-  if(pPressedWidget == m_pUi->m_pInputFrame)
-  {
-    startModuleInputDrag(pEvent);
-  }
-  else if (pPressedWidget == m_pUi->m_pOutputFrame)
-  {
-    startModuleOutputDrag(pEvent);
-  }
-  else
-*/
-  {
-    startModuleDrag(pEvent);
-  }
-  
+  startModuleDrag(pEvent);
 }
 
 //---------------------------------------------dropEvent
@@ -734,12 +628,6 @@ void ModuleWidget::processModuleInputReceive(QDropEvent* pEvent)
 void ModuleWidget::processModuleOutputReceive(QDropEvent* pEvent)
 {
   CLAY_FAIL(); //not implemented yet
-}
-
-//---------------------------------------------widgetInActiveState
-bool ModuleWidget::widgetInActiveState()
-{
-  return m_iStateActiveCounter > 0;
 }
 
 //---------------------------------------------alignInputWidgets

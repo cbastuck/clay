@@ -25,7 +25,7 @@ IF(WIN32)
   ADD_DEFINITIONS(/D "_UNICODE" /D "UNICODE")
 ENDIF(WIN32)
 
-#------------------ check for clay dependdencies ---------------
+#------------------ check for clay dependencies ---------------
 FIND_PACKAGE(ClayQt4 COMPONENTS QtCore QtGui)
 
 #--------------------- include search path ---------------------
@@ -39,25 +39,15 @@ ELSEIF(UNIX)
     SET(CLAY_PLATFORM_LIBS )    
 ENDIF()
 
-#---------------------- clay projects --------------------------
-ADD_SUBDIRECTORY(externals)
-
-#--------------------- externals search paths -------------------
-LINK_DIRECTORIES(${CLAY_EXTERNALS_DIR}/bin/x86 #TODO: check architecture
-				 ${CLAY_BOOST_LIBPATH}) 
-				 
-INCLUDE_DIRECTORIES(${CLAY_BOOST_INCLUDE}
-                    ${CLAY_XERCES_INCLUDE})
-					
 IF(QT4_FOUND)
 	INCLUDE(${QT_USE_FILE})
 endif()					
 #---------------------------------------------------------------
 
 ADD_SUBDIRECTORY(clay-core)
-#ADD_SUBDIRECTORY(clay-modules)
-#ADD_SUBDIRECTORY(clay-data-types)
-#ADD_SUBDIRECTORY(clay-test)
+ADD_SUBDIRECTORY(clay-modules)
+ADD_SUBDIRECTORY(clay-data-types)
+ADD_SUBDIRECTORY(clay-test)
 
 #---------------- gui-related clay projects -------------------
 IF(QT4_FOUND)

@@ -22,7 +22,6 @@
 //clay-core
 #include <clay-core/base/Module.h>
 #include <clay-core/event/SignalReceiver.h>
-#include <clay-core/base/ModuleDescriptor.h>
 
 //clay-ui
 #include <clay-gui-qt/base/QtViewerWorkspace.h>
@@ -81,9 +80,8 @@ public slots:
   void dragMoveEvent(QDragMoveEvent* pEvent);
   void dropEvent(QDropEvent* pEvent);
 
-  Module* onAddModule(ModuleDescriptorTraits::tModuleID    aModuleId,
+  Module* onAddModule(const char* moduleURI,
                       const tString&                       sRuntimeModuleId,
-                      ModuleDescriptorTraits::tNamespaceID aNamespaceId,
                       XERCES::DOMNode*                     pConfigNode=NULL);
 
   void onRemoveModule(UI::ModuleWidget* pWidget);

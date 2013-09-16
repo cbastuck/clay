@@ -43,7 +43,7 @@ FileStream::operator bool()
 bool FileStream::open(unsigned int uFileOpenMode)
 {
   
-  std::ios::openmode aMode = static_cast<std::ios::openmode>(0);
+  std::ios::openmode aMode = 0;
   if(!(uFileOpenMode & WRITE_ONLY_ACCESS))
   {
     aMode |= std::ios::in;

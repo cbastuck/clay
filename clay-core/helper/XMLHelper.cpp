@@ -316,6 +316,18 @@ bool XercesXML::getAttributeValue(XERCES::DOMElement* pNode, const char* pAttrNa
 }
 
 //---------------------------------------------getBinaryAttributeValue
+bool XercesXML::getAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, bool& bDst)
+{
+  tString sDst; 
+  if(getAttributeValue(pNode, pAttrName, sDst))
+  {
+    bDst = (sDst == "1") || (sDst == "true") || (sDst == "True") || (sDst == "TRUE");
+    return true;
+  }
+  return false;
+}
+
+//---------------------------------------------getBinaryAttributeValue
 bool XercesXML::getBinaryAttributeValue(XERCES::DOMElement* pNode, const char* pAttrName, tBinaryBuffer& aDst)
 {
   tString sBase64Encoded;

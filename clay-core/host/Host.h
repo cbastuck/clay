@@ -21,7 +21,6 @@
 
 #include <clay-core/base/Module.h>
 #include <clay-core/event/Signal.h>
-#include <clay-core/base/ModuleDescriptor.h>
 
 #include <deque>
 #include <xercesc/dom/DOMElement.hpp>
@@ -55,10 +54,11 @@ public:
 
   CLAY_DLL_EXPORT virtual bool saveProject(const tString& sFilename);
   CLAY_DLL_EXPORT virtual bool saveProject(XERCES::DOMElement* pNode);
-  CLAY_DLL_EXPORT virtual bool saveModule (XERCES::DOMElement* pNode, Module* pModule);
+  CLAY_DLL_EXPORT virtual bool saveModule (XERCES::DOMElement* pNode, Module* pModule); //TODO: rename storeModule
 
   CLAY_DLL_EXPORT virtual bool loadProject(const tString& sFilename);
   CLAY_DLL_EXPORT virtual bool loadProject(XERCES::DOMElement* pNode);
+  //TODO: rename to restoreModule
   CLAY_DLL_EXPORT virtual Module* loadModule (XERCES::DOMElement* pNode, Module::tConnectionMap* pInputConnections, Module::tConnectionMap* pOutputConnections);
 
   CLAY_DLL_EXPORT virtual void closeProject();
@@ -68,11 +68,10 @@ public:
                                        XERCES::DOMNode* pConfigNode, 
                                        bool             bAddToManagedModules); //inline
 
-  CLAY_DLL_EXPORT Module* createModule(ModuleDescriptorTraits::tModuleID    aModuleId, 
-                                        ModuleDescriptorTraits::tNamespaceID aNamespaceId,
-                                        const tString&                       sRuntimeModuleId, 
-                                        XERCES::DOMNode*                     pConfigNode, 
-                                        bool                                 bAddToManagedModules);
+  CLAY_DLL_EXPORT Module* createModule(const char* sModuleURI,
+                                       const tString& sRuntimeModuleId, 
+                                       XERCES::DOMNode* pConfigNode, 
+                                       bool bAddToManagedModules);
 
   CLAY_DLL_EXPORT void removeModule(Module* pModule, bool bRemoveFromManagedModules=true);
 
@@ -127,11 +126,10 @@ inline MODULE* Host::createModule(const tString&   sRuntimeModuleId,
                                   XERCES::DOMNode* pConfigNode, 
                                   bool             bAddToManagedModules)
 {
-  return static_cast<MODULE*>(createModule(MODULE::tDescriptor::eModuleId, 
-                                            MODULE::tDescriptor::eNamespaceId, 
-                                            sRuntimeModuleId,
-                                            pConfigNode, 
-                                            bAddToManagedModules));
+  return static_cast<MODULE*>(createModule(MODULE::getModuleURI(), 
+                                           sRuntimeModuleId,
+                                           pConfigNode, 
+                                           bAddToManagedModules));
 }
 
 //---------------------------------------------beginModules

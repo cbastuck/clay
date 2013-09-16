@@ -25,14 +25,10 @@ namespace CLAY
 {
 
   template<class CONV>
-  class ConversionModule : public ModuleHelper<ConversionModule<CONV>,
-                                               HELPER::IntegerEncoding<'C','O','N','V'>::value,
-                                               HELPER::IntegerEncoding<'C','O','N','V'>::value >
+  class ConversionModule : public ModuleHelper
   {
   private:
-    typedef ModuleHelper<ConversionModule<CONV>,
-                        HELPER::IntegerEncoding<'C','O','N','V'>::value,
-                        HELPER::IntegerEncoding<'C','O','N','V'>::value > tBase;
+    typedef ModuleHelper tBase;
 
     typedef typename CONV::tConvSrc tConvSrc;
     typedef typename CONV::tConvDst tConvDst;
@@ -44,6 +40,11 @@ namespace CLAY
         m_pModuleOutput(NULL)
     {
 
+    }
+
+    virtual const char* getModuleURI() const
+    {
+      return "http://claymodules.org/Conversion";
     }
 
     virtual bool init(XERCES::DOMNode* pNode)
