@@ -327,10 +327,7 @@ Module* Host::createModule(const char* sModuleURI,
     return NULL;
   }
 
-  if(pConfigNode)
-  {
-    pModule->init(pConfigNode); //TODO: invoke load instead of init (RAII)
-  }
+  pModule->init(pConfigNode); //TODO: make RAII compliant
 
   if(bAddToManagedModules)
   {
