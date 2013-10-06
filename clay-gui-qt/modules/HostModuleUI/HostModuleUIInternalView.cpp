@@ -293,7 +293,6 @@ void HostModuleUIInternalView::onPlayButton()
 {
   CLAY::Module::ProcessResultCode eResult = m_pHostModule->play();
   CLAY_ASSERT(eResult == Module::Process_OK);
-  //m_pHostModule->compileAndRun();
 }
 
 //---------------------------------------------onSettingsButton
