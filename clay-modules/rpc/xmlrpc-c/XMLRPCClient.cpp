@@ -34,22 +34,42 @@
 namespace CLAY { namespace MODULE {
 
 //---------------------------------------------
+const char* XMLRPCClient::staticModuleURI()
+{
+    return "http://claymodules.org/rpc/xmlrpclient";
+}
+
+//---------------------------------------------
 XMLRPCClient::XMLRPCClient(const tString& sId)
-  : tBase(sId)
+  : Module(sId)
 {
 
+}
+
+//---------------------------------------------
+const char* XMLRPCClient::getModuleURI() const
+{
+    return staticModuleURI();
 }
 
 //---------------------------------------------
 bool XMLRPCClient::init(XERCES::DOMNode* pNode)
 {
-  return tBase::init(pNode);
+  if(!Module::init(pNode))
+  {
+      return false;
+  }
+
+  registerModuleOutputs();
+  registerModuleInputs();
+
+  return true;
 }
 
 //---------------------------------------------
 void XMLRPCClient::deInit()
 {
-
+    Module::deInit();
 }
 
 //---------------------------------------------

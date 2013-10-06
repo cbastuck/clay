@@ -1,7 +1,7 @@
 #ifndef CLAY_VALUE_MODULE_H_
 #define CLAY_VALUE_MODULE_H_
 
-#include <clay-core/base/ModuleHelper.h>
+#include <clay-core/base/Module.h>
 #include <clay-core/base/ModuleOutput.h>
 #include <clay-core/helper/LexicalConversion.h>
 
@@ -18,20 +18,14 @@ public:
 //---------------------------------------------
 //---------------------------------------------
 
-template<class tDerived, class tValue, class tModuleId>
-class ValueModule : public ModuleHelper<tDerived,
-                                        tModuleId::value,
-                                        HELPER::IntegerEncoding<'C','O','M','N'>::value>,
-                    public ValueModuleBase
+template<class tValue>
+class ValueModule : public Module
+                  , public ValueModuleBase
 {
-private:
-  typedef ModuleHelper<tDerived, 
-                       tModuleId::value, 
-                       HELPER::IntegerEncoding<'C','O','M','N'>::value> tBase;
-  typedef tValue T;
-
 public:
   ValueModule(const tString& sId);
+
+  bool init(XERCES::DOMNode* pNode);
 
   virtual void registerModuleOutputs();
 
@@ -39,8 +33,8 @@ public:
   virtual bool load(XERCES::DOMElement* pNode, Module::tConnectionMap* pInputConnections = NULL, Module::tConnectionMap* pOutputConnections = NULL);
   
 protected:
-  virtual const T* getValue();
-  virtual bool setValue(const T& aVal);
+  virtual const tValue* getValue();
+  virtual bool setValue(const tValue& aVal);
 
 private:
 };
@@ -50,24 +44,39 @@ private:
 //---------------------------------------------
 
 //---------------------------------------------ValueModule
-template<class tDerived, class tValue, class tModuleId>
-inline ValueModule<tDerived, tValue, tModuleId>::ValueModule(const tString& sId)
-  : tBase(sId)
+template<class tValue>
+inline ValueModule<tValue>::ValueModule(const tString& sId)
+  : Module(sId)
 {
+    registerModuleOutputs();
+}
+
+//---------------------------------------------init
+template<class tValue>
+inline bool ValueModule<tValue>::init(XERCES::DOMNode* pNode)
+{
+  if(!Module::init(pNode))
+  {
+      return false;
+  }
+
+  registerModuleOutputs();
+
+  return false;
 }
 
 //---------------------------------------------registerModuleOutputs
-template<class tDerived, class tValue, class tModuleId>
-inline void ValueModule<tDerived, tValue, tModuleId>::registerModuleOutputs()
+template<class tValue>
+inline void ValueModule<tValue>::registerModuleOutputs()
 {
-  registerOutput(new ModuleOutput<T>(), "value");
+  registerOutput(new ModuleOutput<tValue>(), "value");
 }
 
 //---------------------------------------------registerModuleOutputs
-template<class tDerived, class tValue, class tModuleId>
-inline const typename ValueModule<tDerived, tValue, tModuleId>::T* ValueModule<tDerived, tValue, tModuleId>::getValue()
+template<class tValue>
+inline const tValue* ValueModule<tValue>::getValue()
 {
-  ModuleOutput<T>* pOutput = static_cast<ModuleOutput<T>*>(tBase::getOutput("value"));
+  ModuleOutput<tValue>* pOutput = static_cast<ModuleOutput<tValue>*>(getOutput("value"));
   if(pOutput)
   {
     return &pOutput->getData();
@@ -76,21 +85,21 @@ inline const typename ValueModule<tDerived, tValue, tModuleId>::T* ValueModule<t
 }
 
 //---------------------------------------------registerModuleOutputs
-template<class tDerived, class tValue, class tModuleId>
-bool ValueModule<tDerived, tValue, tModuleId>::setValue(const T& aVal)
+template<class tValue>
+bool ValueModule<tValue>::setValue(const tValue& val)
 {
-  ModuleOutput<T>* pOutput = static_cast<ModuleOutput<T>*>(tBase::getOutput("value"));
+  ModuleOutput<tValue>* pOutput = static_cast<ModuleOutput<tValue>*>(getOutput("value"));
   if(pOutput)
   {
-    pOutput->setData(aVal);
+    pOutput->setData(val);
     return true;
   }
   return false;
 }
 
 //---------------------------------------------save
-template<class tDerived, class tValue, class tModuleId>
-bool ValueModule<tDerived, tValue, tModuleId>::save(XERCES::DOMElement* pParent)
+template<class tValue>
+bool ValueModule<tValue>::save(XERCES::DOMElement* pParent)
 {
   XERCES::DOMElement* pNode = XercesXML::appendNode(pParent, "value-module");
 
@@ -102,12 +111,12 @@ bool ValueModule<tDerived, tValue, tModuleId>::save(XERCES::DOMElement* pParent)
   }
 
   XERCES::DOMElement* pBase = XercesXML::appendNode(pNode, "base");
-  return tBase::save(pBase);
+  return save(pBase);
 }
 
 //---------------------------------------------load
-template<class tDerived, class tValue, class tModuleId>
-bool ValueModule<tDerived, tValue, tModuleId>::load(XERCES::DOMElement* pParent, Module::tConnectionMap* pInputConnections, Module::tConnectionMap* pOutputConnections)
+template<class tValue>
+bool ValueModule<tValue>::load(XERCES::DOMElement* pParent, Module::tConnectionMap* pInputConnections, Module::tConnectionMap* pOutputConnections)
 {
   XERCES::DOMElement* pNode = XercesXML::findChildNode(pParent, "value-module");
   if(!pNode)
@@ -129,7 +138,7 @@ bool ValueModule<tDerived, tValue, tModuleId>::load(XERCES::DOMElement* pParent,
     return false;
   }
 
-  return tBase::load(pBase, pInputConnections, pOutputConnections);
+  return load(pBase, pInputConnections, pOutputConnections);
 }
 
 } }

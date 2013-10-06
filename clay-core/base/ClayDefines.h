@@ -31,6 +31,7 @@
 #endif
 
 #include <math.h>
+#include <cstddef> //size_t
 
 //use memcpy implementation from here
 #include <string.h>

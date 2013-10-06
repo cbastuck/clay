@@ -21,14 +21,40 @@
 namespace CLAY{ namespace MODULE{
 
 //---------------------------------------------
+const char* AdderModule::staticModuleURI()
+{
+  return "http://claymodules.org/math/adder";
+}
+
+//---------------------------------------------
 AdderModule::AdderModule(const tString& sId)
-  : tBase(sId)
+  : Module(sId)
 {
 }
 
 //---------------------------------------------
 AdderModule::~AdderModule()
 {
+}
+
+//---------------------------------------------
+const char* AdderModule::getModuleURI() const
+{
+    return staticModuleURI();
+}
+
+//---------------------------------------------
+bool AdderModule::init(XERCES::DOMNode* pNode)
+{
+    if(!Module::init(pNode))
+    {
+        return false;
+    }
+
+    registerModuleInputs();
+    registerModuleOutputs();
+
+    return true;
 }
 
 //---------------------------------------------
@@ -47,13 +73,13 @@ void AdderModule::registerModuleOutputs()
 //---------------------------------------------
 bool AdderModule::save(XERCES::DOMElement* pNode)
 {
-  return tBase::save(pNode);
+  return save(pNode);
 }
 
 //---------------------------------------------
 bool AdderModule::load(XERCES::DOMElement* pNode, Module::tConnectionMap* pInputConnections, Module::tConnectionMap* pOutputConnections)
 {
-  return tBase::load(pNode, pInputConnections, pOutputConnections);
+  return load(pNode, pInputConnections, pOutputConnections);
 }
 
 //---------------------------------------------

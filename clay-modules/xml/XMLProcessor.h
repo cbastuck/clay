@@ -19,21 +19,21 @@
 #ifndef XMLPROCESSOR_H_
 #define XMLPROCESSOR_H_
 
-#include <clay-core/base/ModuleHelper.h>
+#include <clay-core/base/Module.h>
 
 namespace CLAY { namespace MODULE {
 
-class XMLProcessor : public ModuleHelper<XMLProcessor,
-                                         HELPER::IntegerEncoding<'X','P','R','C'>::value,
-                                         HELPER::IntegerEncoding<'X','M','L','-'>::value >
+class XMLProcessor : public Module
 {
-private:
-  typedef ModuleHelper<XMLProcessor,
-                       HELPER::IntegerEncoding<'X','P','R','C'>::value,
-                       HELPER::IntegerEncoding<'X','M','L','-'>::value > tBase;
 public:
+  static const char* staticModuleURI();
+
   XMLProcessor(const tString& sId);
   virtual ~XMLProcessor();
+
+  virtual const char* getModuleURI() const;
+
+  virtual bool init(XERCES::DOMNode *pNode);
 
   virtual void registerModuleOutputs();
   virtual void registerModuleInputs();

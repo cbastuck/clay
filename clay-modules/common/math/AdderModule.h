@@ -19,21 +19,21 @@
 #ifndef ADDER_MODULE_H_
 #define ADDER_MODULE_H_
 
-#include <clay-core/base/ModuleHelper.h>
+#include <clay-core/base/Module.h>
 
 namespace CLAY{ namespace MODULE{
 
-class AdderModule : public ModuleHelper<AdderModule,
-                                        HELPER::IntegerEncoding<'a','d','d','r'>::value,
-                                        HELPER::IntegerEncoding<'C','O','M','N'>::value>
+class AdderModule : public Module
 {
-private:
-  typedef ModuleHelper<AdderModule,
-                       HELPER::IntegerEncoding<'a','d','d','r'>::value,
-                       HELPER::IntegerEncoding<'C','O','M','N'>::value> tBase;
 public:
+  static const char* staticModuleURI();
+
   AdderModule(const tString& sId);
   virtual ~AdderModule();
+
+  virtual const char* getModuleURI() const;
+
+  virtual bool init(XERCES::DOMNode* pNode);
 
   virtual void registerModuleInputs();
   virtual void registerModuleOutputs();

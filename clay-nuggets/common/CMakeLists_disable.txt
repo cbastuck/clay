@@ -8,11 +8,11 @@ PROJECT(${CLAY_TARGET})
 
 MESSAGE("Invoke cmake for: ${CLAY_TARGET} ...")
 
-SET(CLAY_COMMON_NUGGET_SRC    CommonNugget.cpp
-							   ${CLAY_ROOT}/clay-modules/common/math/AdderModule.h
-							   ${CLAY_ROOT}/clay-modules/common/math/AdderModule.cpp
-							   ${CLAY_ROOT}/clay-modules/common/output/ConsoleOutput.h
-							   ${CLAY_ROOT}/clay-modules/common/output/ConsoleOutput.cpp)
+SET(CLAY_COMMON_NUGGET_SRC  CommonNugget.cpp
+                            ${CLAY_ROOT}/clay-modules/common/math/AdderModule.h
+                            ${CLAY_ROOT}/clay-modules/common/math/AdderModule.cpp
+                            ${CLAY_ROOT}/clay-modules/common/output/ConsoleOutput.h
+                            ${CLAY_ROOT}/clay-modules/common/output/ConsoleOutput.cpp)
 
 SOURCE_GROUP(${CLAY_TARGET} FILES ${CLAY_COMMON_NUGGET_SRC})
 
@@ -27,8 +27,8 @@ INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
 ADD_LIBRARY(${CLAY_TARGET} SHARED ${CLAY_COMMON_NUGGET_SRC} ${CLAY_MOC_OUTFILES})
 
 TARGET_LINK_LIBRARIES(${CLAY_TARGET}
-					  clay-gui-qt
-					  clay-core
-					  clay-data-types
-					  ${CLAY_XERCES_LIB}
-                      ${QT_LIBRARIES})     
+                      clay-gui-qt
+                      clay-core
+                      clay-data-types
+                      ${CLAY_XERCES_LIB}
+                      ${QT_LIBRARIES})

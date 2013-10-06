@@ -19,21 +19,21 @@
 #ifndef CONSOLE_OUTPUT_H_
 #define CONSOLE_OUTPUT_H_
 
-#include <clay-core/base/ModuleHelper.h>
+#include <clay-core/base/Module.h>
 
 namespace CLAY{ namespace MODULE{
 
-class ConsoleOutput : public ModuleHelper<ConsoleOutput,
-                                          HELPER::IntegerEncoding<'c','o','u','t'>::value,
-                                          HELPER::IntegerEncoding<'C','O','M','N'>::value>
+class ConsoleOutput : public Module
 {
-private:
-  typedef ModuleHelper<ConsoleOutput,
-                       HELPER::IntegerEncoding<'c','o','u','t'>::value,
-                       HELPER::IntegerEncoding<'C','O','M','N'>::value> tBase;
 public:
+  static const char* staticModuleURI();
+
   ConsoleOutput(const tString& sId);
   virtual ~ConsoleOutput();
+
+  virtual const char* getModuleURI() const;
+
+  virtual bool init(XERCES::DOMNode *pNode);
 
   virtual void registerModuleInputs();
 

@@ -7,18 +7,18 @@
 
 namespace CLAY{ namespace MODULE{
 
-class UnsignedIntModule : public ValueModule<UnsignedIntModule, 
-                                             unsigned int, 
-                                             HELPER::IntegerEncoding<'U','I','N','T'> >
+class UnsignedIntModule : public ValueModule<unsigned int>
 {
 private:
-  typedef ValueModule<UnsignedIntModule, 
-                      unsigned int, 
-                      HELPER::IntegerEncoding<'U','I','N','T'> > tBase;
+  typedef ValueModule<unsigned int> tBase;
 
 public:
+  static const char* staticModuleURI();
+
   UnsignedIntModule(const tString& sId);
   virtual ~UnsignedIntModule();
+
+  virtual const char* getModuleURI() const;
 
   virtual bool setString(const tString& sValue);
   virtual bool getString(tString& sDst);
@@ -27,6 +27,12 @@ public:
 //---------------------------------------------
 //---------------------------------------------
 //---------------------------------------------
+
+//---------------------------------------------
+inline const char* UnsignedIntModule::staticModuleURI()
+{
+    return "http://claymodules.org/common/uint";
+}
 
 //---------------------------------------------UnsignedIntModule
 inline UnsignedIntModule::UnsignedIntModule(const tString& sId)
@@ -37,6 +43,12 @@ inline UnsignedIntModule::UnsignedIntModule(const tString& sId)
 //---------------------------------------------~UnsignedIntModule
 inline UnsignedIntModule::~UnsignedIntModule()
 {
+}
+
+//---------------------------------------------
+inline const char* UnsignedIntModule::getModuleURI() const
+{
+    return staticModuleURI();
 }
 
 //---------------------------------------------setString

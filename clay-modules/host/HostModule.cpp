@@ -72,15 +72,20 @@ const char* HostModule::getModuleURI() const
 //---------------------------------------------init
 bool HostModule::init(XERCES::DOMNode* pNode)
 {
-  if(Host::init())
+  if(!Host::init())
   {
-    return Module::init(pNode);
+    return false;
+  }
+
+  if(!Module::init(pNode))
+  {
+      return false;
   }
 
   registerModuleInputs();
   registerModuleOutputs();
 
-  return false;
+  return true;
 }
 
 //---------------------------------------------deInit

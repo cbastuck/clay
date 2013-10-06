@@ -19,21 +19,18 @@
 #ifndef XMLRPCXML_RPC_CLIENT_H_
 #define XMLRPCXML_RPC_CLIENT_H_
 
-#include <clay-core/base/ModuleHelper.h>
+#include <clay-core/base/Module.h>
 
 namespace CLAY{ namespace MODULE{
 
-class XMLRPCClient : public ModuleHelper<XMLRPCClient,
-                                         HELPER::IntegerEncoding<'X','R','P','C'>::value,
-                                         HELPER::IntegerEncoding<'C','O','M','M'>::value>
+class XMLRPCClient : public Module
 {
-private:
-  typedef ModuleHelper<XMLRPCClient,
-                       HELPER::IntegerEncoding<'X','R','P','C'>::value,
-                       HELPER::IntegerEncoding<'C','O','M','M'>::value> tBase;
-
 public:
+  static const char* staticModuleURI();
+
   XMLRPCClient(const tString& sId);
+
+  virtual const char* getModuleURI() const;
 
   virtual bool init(XERCES::DOMNode* pNode);
   virtual void deInit();

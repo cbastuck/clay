@@ -10,14 +10,18 @@ MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} .
 
 SET(CLAY_TEST_VECTOR_SRC test-vector.cpp)
 
+INCLUDE(${CLAY_EXTERNALS_DIR}/boost/config.cmake)
+INCLUDE(${CLAY_EXTERNALS_DIR}/xercesc/config.cmake)
+
+
 #------- the include section ------------
 INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES} 
                     ${CMAKE_CURRENT_BINARY_DIR}
                     ${CMAKE_BINARY_DIR} 
                     ${CLAY_EXTERNAL_INC} 
                     ${CLAY_PLATFORM_INCLUDES}
-					${CLAY_XERCES_INCLUDE}
-					${CLAY_BOOST_INCLUDE}
+		    ${CLAY_XERCES_INCLUDE}
+		    ${CLAY_BOOST_INCLUDE}
                     ..)
             
 #------- the target section ------------

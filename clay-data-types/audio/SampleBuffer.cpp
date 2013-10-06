@@ -190,7 +190,8 @@ SampleBuffer SampleBuffer::createClip(unsigned int uStartSample, unsigned int uN
 Const<SampleBuffer> SampleBuffer::createClip(unsigned int uStartSample, unsigned int uNumSamples, unsigned int uNumChannels) const
 {
   SampleBuffer* pThis = const_cast<SampleBuffer*>(this);
-  return Const<SampleBuffer>(pThis->createClip(uStartSample, uNumSamples, uNumChannels));
+  SampleBuffer tmp = pThis->createClip(uStartSample, uNumSamples, uNumChannels);
+  return Const<SampleBuffer>(tmp);
 }
 
 //---------------------------------------------createSilence

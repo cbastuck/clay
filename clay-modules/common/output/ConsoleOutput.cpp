@@ -21,14 +21,39 @@
 namespace CLAY{ namespace MODULE{
 
 //---------------------------------------------
+const char* ConsoleOutput::staticModuleURI()
+{
+  return "http://claymodules.org/debug/cout";
+}
+
+//---------------------------------------------
 ConsoleOutput::ConsoleOutput(const tString& sId)
-  : tBase(sId)
+  : Module(sId)
 {
 }
 
 //---------------------------------------------
 ConsoleOutput::~ConsoleOutput()
 {
+}
+
+//---------------------------------------------
+const char* ConsoleOutput::getModuleURI() const
+{
+    return staticModuleURI();
+}
+
+//---------------------------------------------
+bool ConsoleOutput::init(XERCES::DOMNode *pNode)
+{
+    if(!Module::init(pNode))
+    {
+        return false;
+    }
+
+    registerModuleInputs();
+
+    return true;
 }
 
 //---------------------------------------------

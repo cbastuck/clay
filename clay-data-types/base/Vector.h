@@ -23,6 +23,8 @@
 #include <clay-data-types/base/Const.h>
 #include <clay-data-types/base/SharedData.h>
 
+#include <algorithm>
+
 namespace CLAY{ namespace MODEL{
 
 template<class T>

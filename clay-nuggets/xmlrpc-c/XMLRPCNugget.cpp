@@ -20,12 +20,11 @@
 #include <clay-modules/rpc/xmlrpc-c/XMLRPCServer.h>
 
 #include <clay-modules/xml/XMLProcessor.h>
-#include <clay-gui-qt/modules/xml/XMLProcessorUI.h>
 
 #include <clay-core/nugget/IClayNugget.h>
 
 #define CLAY_MODULE_BUNDLE_NUGGET boost::mpl::list<CLAY::NUGGET::NuggetItem<CLAY::MODULE::XMLRPCClient>, \
                                                    CLAY::NUGGET::NuggetItem<CLAY::MODULE::XMLRPCServer>, \
-                                                   CLAY::NUGGET::NuggetItem<CLAY::MODULE::XMLProcessor, CLAY::UI::XMLProcessorUI> >
+                                                   CLAY::NUGGET::NuggetItem<CLAY::MODULE::XMLProcessor> >
 
 #include <clay-core/nugget/ClayNugget.h>

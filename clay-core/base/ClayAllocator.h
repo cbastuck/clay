@@ -17,6 +17,7 @@
 \**************************************************************************/
 
 //CLAY
+#include <cstddef>
 #include <clay-core/arch/Platform.h>
 
 //STL

@@ -3,6 +3,7 @@
 
 int main(int argc, char** charv)
 {
+  /*
   {
     CLAY::Module aModule("my Module");
     aModule.init(NULL);
@@ -14,6 +15,8 @@ int main(int argc, char** charv)
     unsigned int i=aHost.getNumHostedModules();
     CLAY_ASSERT(i==0);
   }
+  */
+
 
   return 0;
 }

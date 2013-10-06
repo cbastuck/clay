@@ -36,8 +36,14 @@
 namespace CLAY { namespace MODULE {
 
 //---------------------------------------------
+const char* XMLProcessor::staticModuleURI()
+{
+    return "http://claymodules.org/data/xmlprocessor";
+}
+
+//---------------------------------------------
 XMLProcessor::XMLProcessor(const tString& sId)
-  : tBase(sId)
+  : Module(sId)
 {
   XQillaPlatformUtils::initialize();
 }
@@ -47,6 +53,27 @@ XMLProcessor::~XMLProcessor()
 {
   //XQillaPlatformUtils::terminate(); //TODO do not terminate XERCES
 }
+
+//---------------------------------------------
+const char* XMLProcessor::getModuleURI() const
+{
+    return staticModuleURI();
+}
+
+//---------------------------------------------
+bool XMLProcessor::init(XERCES::DOMNode *pNode)
+{
+    if(!Module::init(pNode))
+    {
+        return false;
+    }
+
+    registerModuleOutputs();
+    registerModuleInputs();
+
+    return true;
+}
+
 
 //---------------------------------------------
 void XMLProcessor::registerModuleOutputs()

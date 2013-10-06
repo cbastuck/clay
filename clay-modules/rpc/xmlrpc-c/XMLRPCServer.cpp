@@ -66,10 +66,22 @@ public:
 namespace CLAY{ namespace MODULE{
 
 //---------------------------------------------
+const char* XMLRPCServer::staticModuleURI()
+{
+    return "http://claymodules.org/rpc/xmlrpcserver";
+}
+
+//---------------------------------------------
 XMLRPCServer::XMLRPCServer(const tString& sId) :
-    tBase(sId)
+    Module(sId)
 {
   runServer();
+}
+
+//---------------------------------------------
+const char* XMLRPCServer::getModuleURI() const
+{
+    return staticModuleURI();
 }
 
 //---------------------------------------------

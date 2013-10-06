@@ -8,6 +8,9 @@ PROJECT(${CLAY_TARGET})
 
 MESSAGE("Invoke cmake for: ${CLAY_TARGET} with build type: ${CMAKE_BUILD_TYPE} ...")
 
+INCLUDE(${CLAY_EXTERNALS_DIR}/boost/config.cmake)
+INCLUDE(${CLAY_EXTERNALS_DIR}/xercesc/config.cmake)
+
 SET(CLAY_TEST_MATRIX_SRC test-matrix.cpp)
 
 #------- the include section ------------
