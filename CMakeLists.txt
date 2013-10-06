@@ -9,7 +9,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH    ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 #--------------- set the externals dir -------------------------
-SET(CLAY_ROOT 		   ${CMAKE_SOURCE_DIR})
+SET(CLAY_ROOT          ${CMAKE_SOURCE_DIR})
 SET(CLAY_EXTERNALS_DIR ${CLAY_ROOT}/externals)
 
 #------------ enable static libray linkage under WIN32 ---------
@@ -29,33 +29,33 @@ ENDIF(WIN32)
 FIND_PACKAGE(ClayQt4 COMPONENTS QtCore QtGui)
 
 #--------------------- include search path ---------------------
-SET(CLAY_DEFAULT_INCLUDES ${CLAY_ROOT} 
-						  ${CMAKE_BINARY_DIR})   
+SET(CLAY_DEFAULT_INCLUDES ${CLAY_ROOT}  ${CMAKE_BINARY_DIR})   
 
 #--------------------- library dependencies --------------------
 IF(WIN32)
-    SET(CLAY_PLATFORM_LIBS imm32 winmm ws2_32)
+  SET(CLAY_PLATFORM_LIBS imm32 winmm ws2_32)
 ELSEIF(UNIX)
-    SET(CLAY_PLATFORM_LIBS dl)    
+  SET(CLAY_PLATFORM_LIBS dl)    
 ENDIF()
 
 IF(QT4_FOUND)
-	INCLUDE(${QT_USE_FILE})
-endif()					
+  INCLUDE(${QT_USE_FILE})
+endif()
 #---------------------------------------------------------------
 
 ADD_SUBDIRECTORY(clay-core)
 ADD_SUBDIRECTORY(clay-modules)
 ADD_SUBDIRECTORY(clay-data-types)
 ADD_SUBDIRECTORY(clay-test)
+ADD_SUBDIRECTORY(claython)
 
 #---------------- gui-related clay projects -------------------
 IF(QT4_FOUND)
-	ADD_SUBDIRECTORY(clay-gui-qt)
-	ADD_SUBDIRECTORY(clay-designer)
-	ADD_SUBDIRECTORY(clay-nuggets)
+  ADD_SUBDIRECTORY(clay-gui-qt)
+  ADD_SUBDIRECTORY(clay-designer)
+  ADD_SUBDIRECTORY(clay-nuggets)
 ELSE()
-	MESSAGE("WARNING: Qt not found, all GUI related projects will be ommitted during build")
+  MESSAGE("WARNING: Qt not found, all GUI related projects will be ommitted during build")
 ENDIF()
 
 #------------------------------------------------------------

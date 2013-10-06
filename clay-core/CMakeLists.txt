@@ -17,23 +17,23 @@ INCLUDE(${CLAY_EXTERNALS_DIR}/boost/config.cmake)
 INCLUDE(${CLAY_EXTERNALS_DIR}/xercesc/config.cmake)
 
 SET(CLAY_SRC_FOLDER_BASE   base/ClayDefines.h
-						   base/ClayExecutable.cpp base/ClayExecutable.h
+                           base/ClayExecutable.cpp base/ClayExecutable.h
                            base/ClayRuntime.cpp base/ClayRuntime.h
                            base/Module.cpp base/Module.h
                            base/ClayShaper.cpp base/ClayShaper.h
                            base/ModuleDependencies.cpp base/ModuleDependencies.h
-						   base/ModuleIOBase.h
-						   base/ModuleInputBase.h base/ModuleInputBase.cpp
-						   base/ModuleOutputBase.h base/ModuleOutputBase.cpp
-						   base/ModuleIO.h 
-						   base/ModuleInput.h
-						   base/ModuleOutput.h
-						   base/TypedModuleOutput.h
-						   base/TypedModuleInput.h
-						   base/ModuleOutputProxy.h
-						   base/ModuleInputProxy.h
+                           base/ModuleIOBase.h
+                           base/ModuleInputBase.h base/ModuleInputBase.cpp
+                           base/ModuleOutputBase.h base/ModuleOutputBase.cpp
+                           base/ModuleIO.h
+                           base/ModuleInput.h
+                           base/ModuleOutput.h
+                           base/TypedModuleOutput.h
+                           base/TypedModuleInput.h
+                           base/ModuleOutputProxy.h
+                           base/ModuleInputProxy.h
                            base/ModuleUIDescriptor.h
-						   base/ClayAllocator.h base/ClayAllocator.cpp)
+                           base/ClayAllocator.h base/ClayAllocator.cpp)
 
 SET(CLAY_SRC_FOLDER_HELPER helper/FileHelper.cpp    helper/FileHelper.h
                            helper/SharedLibrary.cpp helper/SharedLibrary.h
@@ -41,20 +41,20 @@ SET(CLAY_SRC_FOLDER_HELPER helper/FileHelper.cpp    helper/FileHelper.h
                            helper/ClayLogger.cpp    helper/ClayLogger.h)
 						 
 SET(CLAY_SRC_FOLDER_EVENT  event/SignalBase.h 
-					       event/Signal.h
-						   event/SignalReceiver.h event/SignalReceiver.cpp)
+                           event/Signal.h
+                           event/SignalReceiver.h event/SignalReceiver.cpp)
 						
 
 SET(CLAY_SRC_FOLDER_HOST   host/Host.cpp host/Host.h)
 
-SET(CLAY_SRC_FOLDER_REG    registry/ModuleRegistry.h   registry/ModuleRegistry.cpp
-						   registry/ModuleUIRegistry.h registry/ModuleUIRegistry.cpp)
+SET(CLAY_SRC_FOLDER_REG    registry/ModuleRegistry.h  registry/ModuleRegistry.cpp
+                           registry/ModuleUIRegistry.h registry/ModuleUIRegistry.cpp)
 
 SET(CLAY_SRC_FOLDER_NUGGET nugget/IClayNugget.h
-					       nugget/ClayNugget.h
-					       nugget/ClayNuggetLoader.h   nugget/ClayNuggetLoader.cpp
-						   nugget/NuggetModuleRegistry.h
-						   nugget/NuggetModuleUIRegistry.h)
+                           nugget/ClayNugget.h
+                           nugget/ClayNuggetLoader.h   nugget/ClayNuggetLoader.cpp
+                           nugget/NuggetModuleRegistry.h
+                           nugget/NuggetModuleUIRegistry.h)
 
 SET(CLAY_SRC_FOLDER_XML    xml/ClayXML.h               xml/ClayXML.cpp
                            xml/XMLNodeChildIterator.h  xml/XMLNodeChildIterator.cpp
@@ -83,7 +83,7 @@ SET(CLAY_SOURCES ${CLAY_SRC_FOLDER_BASE}
                  ${CLAY_SRC_FOLDER_REG}
                  ${CLAY_SRC_FOLDER_NUGGET}
                  ${CLAY_SRC_FOLDER_XML}
-			     ${CLAY_SRC_FOLDER_EVENT}
+                 ${CLAY_SRC_FOLDER_EVENT}
                  ${CLAY_PLATFORM_SOURCES})
 
 INCLUDE_DIRECTORIES(${CLAY_DEFAULT_INCLUDES}
